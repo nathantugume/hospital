@@ -1,0 +1,42 @@
+services:
+  - type: web
+    name: hospital
+    runtime: docker
+    plan: free
+    repo: https://github.com/nathantugume/hospital
+    branch: main
+    envVars:
+      - key: APP_NAME
+        value: Hospital
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: ASSET_URL
+        sync: false
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: hospital-db
+          property: connectionString
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: database
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: MAIL_MAILER
+        value: log
+
+databases:
+  - name: hospital-db
+    plan: free
+    databaseName: hospital
+    user: hospital
