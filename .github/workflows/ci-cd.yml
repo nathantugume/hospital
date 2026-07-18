@@ -187,9 +187,10 @@ jobs:
             "$SHARED/storage/framework/cache/data" "$SHARED/storage/framework/sessions" \
             "$SHARED/storage/framework/views" "$SHARED/storage/logs"
           tar -xzf "$ARCHIVE" -C "$RELEASE"
-          mkdir -p "$RELEASE/bootstrap/cache"
+          mkdir -p "$RELEASE/bootstrap/cache" "$RELEASE/bootstrap/cache/views"
           rm -rf "$RELEASE/storage"
           ln -s "$SHARED/storage" "$RELEASE/storage"
+          printf 'VIEW_COMPILED_PATH=%s\n' "$RELEASE/bootstrap/cache/views" >> "$RELEASE/.env"
 
           cd "$RELEASE"
           /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-blocking --ignore-platform-req=ext-pcntl
