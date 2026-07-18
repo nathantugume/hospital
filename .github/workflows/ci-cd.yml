@@ -1,10 +1,8 @@
 name: CI/CD
 
 on:
-  pull_request:
-    branches: [main]
   push:
-    branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -22,6 +20,7 @@ jobs:
   quality:
     name: Test and validate
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -34,18 +33,27 @@ jobs:
           extensions: bcmath, curl, fileinfo, gd, intl, mbstring, pdo_sqlite, sqlite3, zip, xml
           coverage: none
           tools: composer:v2
+          cache: composer
 
       - name: Validate Composer configuration
         run: composer validate --strict
 
       - name: Install PHP dependencies
         # The source lockfile currently contains Laravel 11 releases flagged by Composer advisories.
-        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-security-blocking
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-blocking
 
       - name: Prepare test environment
         run: |
           cp .env.example .env
           php artisan key:generate --force
+          php artisan optimize:clear
+
+      - name: Validate Laravel production caches
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan optimize:clear
 
       - name: Validate route registration
         run: php artisan route:list --except-vendor
@@ -68,6 +76,7 @@ jobs:
       github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: production
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -87,6 +96,7 @@ jobs:
             'APP_DEBUG=false' \
             "APP_KEY=$APP_KEY" \
             "APP_URL=${APP_URL}" \
+            "ASSET_URL=${APP_URL}" \
             "FRONTEND_URL=${APP_URL}" \
             'APP_TIMEZONE=Africa/Kampala' \
             'DB_CONNECTION=sqlite' \
@@ -162,10 +172,12 @@ jobs:
           touch "$SHARED/database.sqlite"
 
           cd "$RELEASE"
-          /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-security-blocking --ignore-platform-req=ext-pcntl
-          /usr/bin/php artisan migrate --force
+          /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-blocking --ignore-platform-req=ext-pcntl
           /usr/bin/php artisan optimize:clear
+          /usr/bin/php artisan migrate --force
           /usr/bin/php artisan config:cache
+          /usr/bin/php artisan route:cache
+          /usr/bin/php artisan view:cache
           /usr/bin/php artisan storage:link || true
 
           if [ -e "$HOME_DIR/www" ] || [ -L "$HOME_DIR/www" ]; then
@@ -180,7 +192,12 @@ jobs:
 
       - name: Smoke test production site
         run: |
-          curl --fail --silent --show-error --location --retry 3 --retry-all-errors \
-            --output /dev/null --write-out 'home_http=%{http_code}\n' "$APP_URL/"
-          curl --fail --silent --show-error --location --retry 3 --retry-all-errors \
-            --output /dev/null --write-out 'health_http=%{http_code}\n' "$APP_URL/api/v1/health"
+          home_code="$(curl --silent --show-error --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/")"
+          login_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/login")"
+          asset_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/blade.css")"
+          health_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/api/v1/health")"
+          test "$home_code" = 302
+          test "$login_code" = 200
+          test "$asset_code" = 200
+          test "$health_code" = 200
+          printf 'protected_home=%s login=%s asset=%s health=%s\n' "$home_code" "$login_code" "$asset_code" "$health_code"

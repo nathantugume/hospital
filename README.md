@@ -381,10 +381,12 @@ php artisan test --filter=PatientCrudTest
 - `tests/Unit/ServicesTest.php` — Service instantiation + mock responses
 
 ### CI/CD
-GitHub Actions (`.github/workflows/ci.yml`):
-- **test** job: MySQL 8 + Redis 7 services, PHP 8.2, run tests with coverage
-- **lint** job: Laravel Pint code style check
-- **security-check** job: `composer audit` for known vulnerabilities
+GitHub Actions (`.github/workflows/ci-cd.yml`) runs on every push, pull request, and manual dispatch:
+- **quality** job: PHP 8.3, Composer validation/install, PHP syntax checks, Laravel config/route/view cache validation, the complete PHPUnit suite, and a Composer advisory report
+- **deploy** job: runs after quality for pushes to `main` or manual dispatch, publishes an immutable release to Alwaysdata, migrates the shared SQLite database, caches Laravel configuration/routes/views, and smoke-tests protected home access, login, CSS assets, and API health
+
+Configure these GitHub secrets for production deployment:
+`LARAVEL_APP_KEY`, `ALWAYSDATA_SSH_HOST`, `ALWAYSDATA_SSH_USER`, and `ALWAYSDATA_SSH_PASSWORD`.
 
 ## Deployment
 
