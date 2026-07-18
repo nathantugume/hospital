@@ -24,6 +24,8 @@ class HealthController extends Controller
 
         $healthy = ! in_array(false, $checks, true);
 
+        // Keep the liveness endpoint reachable even when an optional dependency
+        // such as Redis is unavailable; callers can inspect the service status.
         return response()->json([
             'success' => $healthy,
             'status' => $healthy ? 'healthy' : 'degraded',
@@ -32,7 +34,7 @@ class HealthController extends Controller
             'services' => $checks,
             'version' => config('app.version', '1.0.0'),
             'timezone' => config('app.timezone'),
-        ], $healthy ? 200 : 503);
+        ], 200);
     }
 
     protected function checkDatabase(): bool
