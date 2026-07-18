@@ -75,4 +75,80 @@ class BladeWebTest extends TestCase
             ->assertOk()
             ->assertSee('Appointments');
     }
+
+    public function test_invalid_browser_credentials_return_to_login_with_errors(): void
+    {
+        $this->from(route('login'))
+            ->post(route('login.store'), [
+                'email' => 'missing@example.com',
+                'password' => 'wrong-password',
+            ])
+            ->assertRedirect(route('login'))
+            ->assertSessionHasErrors('email');
+
+        $this->assertGuest();
+    }
+
+    public function test_authenticated_user_can_logout_from_the_browser_session(): void
+    {
+        $user = User::factory()->admin()->create();
+
+        $this->actingAs($user)
+            ->post(route('logout'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+    }
+
+    public function test_registration_creates_a_patient_account_and_logs_in(): void
+    {
+        $this->get(route('register'))
+            ->assertOk()
+            ->assertSee('Create your account');
+
+        $this->post(route('register.store'), [
+            'name' => 'New Demo Patient',
+            'email' => 'new-patient@example.com',
+            'phone' => '+256700000000',
+            'password' => 'StrongPassword123!',
+            'password_confirmation' => 'StrongPassword123!',
+        ])->assertRedirect('/dashboard');
+
+        $this->assertAuthenticated();
+        $this->assertDatabaseHas('users', [
+            'email' => 'new-patient@example.com',
+            'role' => 'patient',
+        ]);
+    }
+
+    public function test_password_reset_views_are_available(): void
+    {
+        $this->get(route('password.request'))
+            ->assertOk()
+            ->assertSee('Forgot your password?');
+
+        $this->get(route('password.reset', ['token' => 'demo-token', 'email' => 'patient@example.com']))
+            ->assertOk()
+            ->assertSee('Choose a new password');
+    }
+
+    public function test_two_factor_user_is_sent_to_the_browser_challenge(): void
+    {
+        $user = User::factory()->admin()->create([
+            'email' => 'two-factor@example.com',
+            'password' => 'password123',
+            'two_factor_secret' => encrypt('JBSWY3DPEHPK3PXP'),
+            'two_factor_confirmed_at' => now(),
+        ]);
+
+        $this->post(route('login.store'), [
+            'email' => $user->email,
+            'password' => 'password123',
+        ])->assertRedirect(route('two-factor.login'));
+
+        $this->assertGuest();
+        $this->get(route('two-factor.login'))
+            ->assertOk()
+            ->assertSee('Verify your identity');
+    }
 }

@@ -1,13 +1,17 @@
 <?php
 
 return [
-    'defaults' => [
-        'guard' => 'web',
-        'passwords' => 'users',
-        'username' => 'email',
-        'home' => env('FORTIFY_HOME', '/dashboard'),
-        'view_path' => env('FORTIFY_VIEW_PATH', 'resources/views'),
-    ],
+    'guard' => 'web',
+    'passwords' => 'users',
+    'username' => 'email',
+    'email' => 'email',
+    'home' => env('FORTIFY_HOME', '/dashboard'),
+    'views' => true,
+    'prefix' => '',
+    'domain' => null,
+    'middleware' => ['web'],
+    'auth_middleware' => 'auth',
+    'view_path' => env('FORTIFY_VIEW_PATH', 'resources/views'),
     'limiters' => [
         'login' => env('FORTIFY_LIMIT_LOGIN', '5'),
         'two-factor' => env('FORTIFY_LIMIT_2FA', '5'),

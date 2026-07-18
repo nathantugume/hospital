@@ -41,6 +41,8 @@
             <label class="check-row"><input type="checkbox" name="remember" value="1"> Keep me signed in</label>
             <button class="button button-primary" type="submit">Sign in</button>
         </form>
+        <p class="auth-switch"><a href="{{ route('password.request') }}">Forgot password?</a></p>
+        <p class="auth-switch">Need an account? <a href="{{ route('register') }}">Create one</a></p>
     </section>
 </main>
 </body>

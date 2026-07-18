@@ -37,13 +37,17 @@ class AuthController extends Controller
             ]);
         }
 
-        if ($user->two_factor_secret && $user->two_factor_confirmed_at) {
-            throw ValidationException::withMessages([
-                'email' => 'This account requires two-factor authentication. Use the API login flow to complete the challenge.',
+        RateLimiter::clear($request->throttleKey());
+
+        if ($user->hasEnabledTwoFactorAuthentication()) {
+            $request->session()->put([
+                'login.id' => $user->getKey(),
+                'login.remember' => $request->boolean('remember'),
             ]);
+
+            return redirect()->route('two-factor.login');
         }
 
-        RateLimiter::clear($request->throttleKey());
         Auth::login($user, $request->boolean('remember'));
         $request->session()->regenerate();
 

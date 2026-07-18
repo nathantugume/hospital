@@ -2,6 +2,10 @@
 
 namespace App\Providers;
 
+use App\Actions\Fortify\CreateNewUser;
+use App\Actions\Fortify\ResetUserPassword;
+use App\Actions\Fortify\UpdateUserPassword;
+use App\Actions\Fortify\UpdateUserProfileInformation;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Actions\AttemptToAuthenticate;
@@ -24,7 +28,12 @@ class FortifyServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Authentication view (Fortify expects views; for API-only we override actions)
+        Fortify::viewPrefix('auth.');
+        Fortify::createUsersUsing(CreateNewUser::class);
+        Fortify::resetUserPasswordsUsing(ResetUserPassword::class);
+        Fortify::updateUserPasswordsUsing(UpdateUserPassword::class);
+        Fortify::updateUserProfileInformationUsing(UpdateUserProfileInformation::class);
+
         Fortify::authenticateUsing(function (Request $request) {
             $user = User::where('email', $request->email)->first();
 
@@ -49,7 +58,5 @@ class FortifyServiceProvider extends ServiceProvider
                 ->by($request->session()->get('login.id'));
         });
 
-        // Disable views — we serve a static frontend
-        
     }
 }

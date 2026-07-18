@@ -12,6 +12,10 @@ Route::middleware('guest')->group(function (): void {
     Route::post('/login', [AuthController::class, 'store'])
         ->middleware('throttle:login')
         ->name('login.store');
+    Route::redirect('/login.html', '/login')->name('legacy.login');
+    Route::redirect('/register.html', '/register')->name('legacy.register');
+    Route::redirect('/forgot-password.html', '/forgot-password')->name('legacy.forgot-password');
+    Route::redirect('/two-step-verification.html', '/two-factor-challenge')->name('legacy.two-factor');
 });
 
 Route::post('/logout', [AuthController::class, 'destroy'])
@@ -32,7 +36,6 @@ Route::middleware('auth')->group(function (): void {
         ->name('web.invoices.index');
 
     Route::redirect('/index.html', '/')->name('legacy.index');
-    Route::redirect('/login.html', '/login')->name('legacy.login');
     Route::get('/{page}.html', [LegacyPageController::class, 'show'])
         ->where('page', '[A-Za-z0-9-]+')
         ->name('legacy.page');
