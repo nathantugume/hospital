@@ -33,7 +33,6 @@ jobs:
           extensions: bcmath, curl, fileinfo, gd, intl, mbstring, pdo_sqlite, sqlite3, zip, xml
           coverage: none
           tools: composer:v2
-          cache: composer
 
       - name: Validate Composer configuration
         run: composer validate --strict
@@ -45,6 +44,13 @@ jobs:
       - name: Prepare test environment
         run: |
           cp .env.example .env
+          sed -i \
+            -e 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' \
+            -e 's/^DB_DATABASE=.*/DB_DATABASE=:memory:/' \
+            -e 's/^CACHE_STORE=.*/CACHE_STORE=array/' \
+            -e 's/^SESSION_DRIVER=.*/SESSION_DRIVER=array/' \
+            -e 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' \
+            .env
           php artisan key:generate --force
           php artisan optimize:clear
 
