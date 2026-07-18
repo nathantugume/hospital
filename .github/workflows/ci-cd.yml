@@ -35,17 +35,17 @@ jobs:
           coverage: none
           tools: composer:v2
 
-      - name: Prepare test environment
-        run: |
-          cp .env.example .env
-          php artisan key:generate --force
-
       - name: Validate Composer configuration
         run: composer validate --strict
 
       - name: Install PHP dependencies
         # The source lockfile currently contains Laravel 11 releases flagged by Composer advisories.
         run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-blocking
+
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --force
 
       - name: Validate route registration
         run: php artisan route:list --except-vendor
