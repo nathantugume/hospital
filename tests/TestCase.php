@@ -6,5 +6,12 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
-    //
+    use \Illuminate\Foundation\Testing\RefreshDatabase;
+    use \Illuminate\Foundation\Testing\WithFaker;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+    }
 }

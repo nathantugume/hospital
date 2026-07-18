@@ -1,0 +1,87 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # Application (Laravel + Nginx + PHP-FPM + Supervisor)
+  # ============================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: meditrack-app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./:/var/www/html
+      - ./public:/var/www/html/public
+      - ./storage:/var/www/html/storage
+    ports:
+      - "8080:80"
+      - "8000:8000"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - DB_HOST=mysql
+      - DB_DATABASE=meditrack
+      - DB_USERNAME=meditrack
+      - DB_PASSWORD=secret
+      - REDIS_HOST=redis
+    networks:
+      - meditrack
+
+  # ============================================================
+  # MySQL 8
+  # ============================================================
+  mysql:
+    image: mysql:8.0
+    container_name: meditrack-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: meditrack
+      MYSQL_USER: meditrack
+      MYSQL_PASSWORD: secret
+      MYSQL_ROOT_PASSWORD: rootsecret
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    networks:
+      - meditrack
+
+  # ============================================================
+  # Redis (cache + sessions + queues + rate limiting)
+  # ============================================================
+  redis:
+    image: redis:7-alpine
+    container_name: meditrack-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    networks:
+      - meditrack
+
+  # ============================================================
+  # Mailpit (local mail testing)
+  # ============================================================
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: meditrack-mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - meditrack
+
+volumes:
+  mysql_data:
+  redis_data:
+
+networks:
+  meditrack:
+    driver: bridge
