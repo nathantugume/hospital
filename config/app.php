@@ -8,6 +8,7 @@ return [
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
     'asset_url' => env('ASSET_URL'),
     'timezone' => env('APP_TIMEZONE', 'Africa/Kampala'),
+    'currency' => env('APP_CURRENCY', 'UGX'),
     'locale' => env('APP_LOCALE', 'en'),
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_UG'),

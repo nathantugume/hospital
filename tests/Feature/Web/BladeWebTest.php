@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Web;
 
+use App\Models\Invoice;
+use App\Models\Patient;
 use App\Models\User;
 use Tests\TestCase;
 
@@ -33,7 +35,7 @@ class BladeWebTest extends TestCase
         $this->assertAuthenticatedAs($user);
         $this->get('/')
             ->assertOk()
-            ->assertSee('Good ')
+            ->assertSee('Admin dashboard')
             ->assertSee($user->name)
             ->assertSee('Upcoming appointments');
     }
@@ -51,6 +53,49 @@ class BladeWebTest extends TestCase
             ->get(route('web.invoices.index'))
             ->assertOk()
             ->assertSee('Invoices');
+    }
+
+    public function test_admin_can_change_currency_from_settings_and_dashboard_uses_it(): void
+    {
+        $user = User::factory()->admin()->create();
+        $patient = Patient::factory()->create();
+        Invoice::factory()->create([
+            'patient_id' => $patient->id,
+            'amount' => 125000,
+            'balance' => 125000,
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('admin.settings.edit'))
+            ->assertOk()
+            ->assertSee('Default currency')
+            ->assertSee('UGX - Ugandan Shilling');
+
+        $this->actingAs($user)
+            ->put(route('admin.settings.update'), ['currency' => 'USD'])
+            ->assertRedirect(route('admin.settings.edit'))
+            ->assertSessionHas('status', 'Currency settings updated successfully.');
+
+        $this->assertDatabaseHas('settings', ['key' => 'default_currency', 'value' => 'USD']);
+
+        $this->actingAs($user)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('$ 125,000.00')
+            ->assertSee('System overview in USD');
+    }
+
+    public function test_patient_cannot_change_system_currency(): void
+    {
+        $user = User::factory()->patient()->create();
+
+        $this->actingAs($user)
+            ->get(route('admin.settings.edit'))
+            ->assertRedirect(route('access.denied'));
+
+        $this->actingAs($user)
+            ->put(route('admin.settings.update'), ['currency' => 'USD'])
+            ->assertRedirect(route('access.denied'));
     }
 
     public function test_patient_is_redirected_from_staff_blade_pages(): void

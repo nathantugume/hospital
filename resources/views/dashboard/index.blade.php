@@ -16,7 +16,7 @@
         ['label' => 'Patients', 'value' => number_format($stats['patients']), 'detail' => 'Registered records'],
         ['label' => 'Today\'s appointments', 'value' => number_format($stats['appointments']), 'detail' => 'Scheduled today'],
         ['label' => 'Care team', 'value' => number_format($stats['staff']), 'detail' => 'Staff profiles'],
-        ['label' => 'Outstanding balance', 'value' => 'UGX '.number_format((float) $stats['outstanding']), 'detail' => 'Pending or overdue'],
+        ['label' => 'Outstanding balance', 'value' => app(\App\Services\CurrencyService::class)->format($stats['outstanding']), 'detail' => 'Pending or overdue'],
         ['label' => 'Medicines', 'value' => number_format($stats['medicines']), 'detail' => 'Inventory catalogue'],
     ])
     @foreach ($cards as $card)

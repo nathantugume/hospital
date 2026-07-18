@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Services\CurrencyService;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,6 +18,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->singleton(\App\Services\MomoService::class, fn($app) => new \App\Services\MomoService(config('services.mtn_momo')));
         $this->app->singleton(\App\Services\NiraService::class, fn($app) => new \App\Services\NiraService(config('services.nira')));
+        $this->app->singleton(CurrencyService::class);
     }
 
     public function boot(): void
@@ -23,5 +26,9 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }
+
+        Blade::directive('money', function (string $expression): string {
+            return "<?php echo e(app(\\App\\Services\\CurrencyService::class)->format($expression)); ?>";
+        });
     }
 }

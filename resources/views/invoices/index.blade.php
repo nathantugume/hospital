@@ -23,7 +23,7 @@
         @else
             <table><thead><tr><th>Invoice</th><th>Patient</th><th>Date</th><th>Amount</th><th>Balance</th><th>Status</th></tr></thead><tbody>
             @foreach ($invoices as $invoice)<tr>
-                <td><strong>{{ $invoice->code }}</strong></td><td>{{ $invoice->patient?->full_name ?? '—' }}</td><td>{{ optional($invoice->date)->format('d M Y') }}</td><td>UGX {{ number_format((float) $invoice->amount) }}</td><td>UGX {{ number_format((float) $invoice->balance) }}</td><td><span class="status status-{{ strtolower($invoice->status ?? 'pending') }}">{{ $invoice->status ?? 'Pending' }}</span></td>
+                <td><strong>{{ $invoice->code }}</strong></td><td>{{ $invoice->patient?->full_name ?? '—' }}</td><td>{{ optional($invoice->date)->format('d M Y') }}</td><td>@money($invoice->amount)</td><td>@money($invoice->balance)</td><td><span class="status status-{{ strtolower($invoice->status ?? 'pending') }}">{{ $invoice->status ?? 'Pending' }}</span></td>
             </tr>@endforeach
             </tbody></table>
             <div class="pagination"><span>Showing {{ $invoices->firstItem() }}–{{ $invoices->lastItem() }} of {{ $invoices->total() }}</span><span>{{ $invoices->links() }}</span></div>

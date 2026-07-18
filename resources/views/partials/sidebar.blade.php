@@ -7,6 +7,10 @@
     <div class="nav-label">Workspace</div>
     <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="nav-icon">◈</span>Dashboard</a>
 
+    @if (auth()->user()->isAdmin())
+        <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.edit') }}"><span class="nav-icon">⚙</span>Settings</a>
+    @endif
+
     @if (! auth()->user()->isPatient())
         <div class="nav-label">Clinical</div>
         @if (Route::has('web.patients.index') && auth()->user()->hasRole(['super_admin', 'admin', 'doctor', 'nurse', 'receptionist', 'lab_technician', 'pharmacist', 'accountant', 'insurance_officer']))
