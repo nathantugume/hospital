@@ -2,6 +2,11 @@
 
 Hospital is a Laravel appointment-management app with doctor records, appointment booking, admin appointment views, Jetstream/Fortify authentication, and email notification flow.
 
+## Live Demo
+
+- Application: https://hospital.alwaysdata.net
+- Login: https://hospital.alwaysdata.net/login
+
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/nathantugume/hospital)
 
 ## Requirements
