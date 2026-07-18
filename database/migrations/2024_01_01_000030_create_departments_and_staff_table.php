@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 /**
@@ -10,6 +11,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        $fullNameExpression = DB::connection()->getDriverName() === 'sqlite'
+            ? "first_name || ' ' || last_name"
+            : "CONCAT(first_name, ' ', last_name)";
+
         Schema::create('departments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
@@ -35,13 +40,13 @@ return new class extends Migration {
             $table->index('department_id');
         });
 
-        Schema::create('staff', function (Blueprint $table) {
+        Schema::create('staff', function (Blueprint $table) use ($fullNameExpression) {
             $table->id();
             $table->string('code', 20)->unique();
             $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
             $table->string('first_name');
             $table->string('last_name');
-            $table->string('full_name')->virtualAs('CONCAT(first_name, " ", last_name)')->nullable();
+            $table->string('full_name')->virtualAs($fullNameExpression)->nullable();
             $table->string('initials', 10)->nullable();
             $table->string('email')->unique();
             $table->text('phone')->nullable();
