@@ -41,6 +41,12 @@ class BladeWebTest extends TestCase
             ->assertSee('Admin dashboard')
             ->assertSee($user->name)
             ->assertSee('Upcoming appointments');
+
+        $this->get('/admin/dashboard')
+            ->assertOk()
+            ->assertSee('Care operations')
+            ->assertSee('Workload by status')
+            ->assertSee('Register patient');
     }
 
     public function test_staff_can_view_blade_patient_and_invoice_lists(): void

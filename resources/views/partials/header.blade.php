@@ -1,6 +1,6 @@
 <header class="app-header">
     <div class="header-actions">
-        <button class="menu-button" type="button" data-menu-toggle aria-label="Open navigation">☰</button>
+        <button class="menu-button" type="button" data-menu-toggle aria-controls="primary-navigation" aria-expanded="false" aria-label="Open navigation">☰</button>
         <div class="header-title">@yield('header', 'Clinical operations')</div>
     </div>
 

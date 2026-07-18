@@ -12,6 +12,7 @@
 <body>
 <div class="app-shell">
     @include('partials.sidebar')
+    <button class="sidebar-backdrop" type="button" data-menu-close aria-label="Close navigation"></button>
 
     <div class="app-main">
         @include('partials.header')
@@ -38,9 +39,18 @@
     </div>
 </div>
 <script>
-    document.querySelector('[data-menu-toggle]')?.addEventListener('click', function () {
-        document.querySelector('[data-sidebar]')?.classList.toggle('is-open');
-    });
+    const sidebar = document.querySelector('[data-sidebar]');
+    const menuToggle = document.querySelector('[data-menu-toggle]');
+    const closeButtons = document.querySelectorAll('[data-menu-close]');
+    const setNavigationOpen = (isOpen) => {
+        sidebar?.classList.toggle('is-open', isOpen);
+        document.querySelector('.sidebar-backdrop')?.classList.toggle('is-visible', isOpen);
+        menuToggle?.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    };
+
+    menuToggle?.addEventListener('click', () => setNavigationOpen(true));
+    closeButtons.forEach((button) => button.addEventListener('click', () => setNavigationOpen(false)));
+    sidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setNavigationOpen(false)));
 </script>
 @stack('scripts')
 </body>
