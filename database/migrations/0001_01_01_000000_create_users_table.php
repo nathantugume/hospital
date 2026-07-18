@@ -11,7 +11,8 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('phone', 30)->nullable()->index();
+            // Stored through Laravel's encrypted cast; retain a bounded indexed column for MySQL compatibility.
+            $table->string('phone', 500)->nullable()->index();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('role', 50)->default('patient')->index();

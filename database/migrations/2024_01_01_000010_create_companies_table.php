@@ -21,7 +21,8 @@ return new class extends Migration {
             $table->string('url')->nullable();
             $table->string('plan', 50)->default('Essential Care');
             $table->string('contact_person');
-            $table->string('phone', 30);
+            // Stored through Laravel's encrypted cast, so the ciphertext needs more room than a raw phone number.
+            $table->text('phone');
             $table->string('country', 50)->default('Uganda');
             $table->string('city', 100);
             $table->text('address')->nullable();
