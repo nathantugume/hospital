@@ -15,9 +15,10 @@ return new class extends Migration {
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('role', 50)->default('patient')->index();
-            $table->foreignId('company_id')->nullable()->constrained()->nullOnDelete();
-            $table->foreignId('staff_id')->nullable()->constrained('staff')->nullOnDelete();
-            $table->foreignId('patient_id')->nullable()->constrained('patients')->nullOnDelete();
+            // These tables are created by later migrations; constraints are added after they exist.
+            $table->foreignId('company_id')->nullable();
+            $table->foreignId('staff_id')->nullable();
+            $table->foreignId('patient_id')->nullable();
             $table->string('two_factor_secret')->nullable();
             $table->text('two_factor_recovery_codes')->nullable();
             $table->timestamp('two_factor_confirmed_at')->nullable();
