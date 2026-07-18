@@ -174,7 +174,8 @@ return new class extends Migration {
         Schema::create('national_id_verifications', function (Blueprint $table) {
             $table->id();
             $table->string('verification_id', 100)->nullable();
-            $table->text('national_id')->nullable();
+            // National IDs are short identifiers and need a bounded length for the composite index below.
+            $table->string('national_id', 100)->nullable();
             $table->string('country', 50)->default('Uganda');
             $table->string('provider', 30)->default('NIRA')->comment('NIRA, NIIMS, NIDA, NIDA_Rwanda');
             $table->string('full_name', 255)->nullable();
