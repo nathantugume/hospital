@@ -12,6 +12,21 @@
             </div>
         @endsession
 
+        <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+            <p class="font-semibold">Tester access</p>
+            <p class="mt-1 text-emerald-800">Use this demo account to explore the system. Please do not enter real patient information.</p>
+            <dl class="mt-3 space-y-1 text-emerald-950">
+                <div class="flex gap-2">
+                    <dt class="font-medium">Email:</dt>
+                    <dd><code>demo.tester@hospital.alwaysdata.net</code></dd>
+                </div>
+                <div class="flex gap-2">
+                    <dt class="font-medium">Password:</dt>
+                    <dd><code>HospitalDemo2026!</code></dd>
+                </div>
+            </dl>
+        </div>
+
         <form method="POST" action="{{ route('login') }}">
             @csrf
 
