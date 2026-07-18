@@ -17,7 +17,10 @@ class BladeWebTest extends TestCase
         $this->get('/login')
             ->assertOk()
             ->assertSee('MediTrack HMS')
-            ->assertSee('Sign in');
+            ->assertSee('Sign in')
+            ->assertSee('Demo access')
+            ->assertSee('admin@meditrack.ea')
+            ->assertSee('password123');
     }
 
     public function test_admin_can_login_and_view_the_blade_dashboard(): void

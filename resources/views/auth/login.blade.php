@@ -18,6 +18,27 @@
         <h1 id="login-heading">Sign in</h1>
         <p class="intro">Use your clinical or administration account to continue.</p>
 
+        <section class="demo-credentials" aria-labelledby="demo-access-heading">
+            <div class="demo-credentials-heading">
+                <div>
+                    <strong id="demo-access-heading">Demo access</strong>
+                    <span>For testing this demo site</span>
+                </div>
+                <span class="demo-badge">Test accounts</span>
+            </div>
+            <p class="demo-credentials-note">All demo accounts use the password <code>password123</code>.</p>
+            <dl class="demo-account-list">
+                <div><dt>Admin</dt><dd><code>admin@meditrack.ea</code></dd></div>
+                <div><dt>Super admin</dt><dd><code>superadmin@meditrack.ea</code></dd></div>
+                <div><dt>Doctor</dt><dd><code>doctor@meditrack.ea</code></dd></div>
+                <div><dt>Nurse</dt><dd><code>nurse@meditrack.ea</code></dd></div>
+                <div><dt>Receptionist</dt><dd><code>receptionist@meditrack.ea</code></dd></div>
+                <div><dt>Laboratory</dt><dd><code>lab@meditrack.ea</code></dd></div>
+                <div><dt>Pharmacy</dt><dd><code>pharmacist@meditrack.ea</code></dd></div>
+                <div><dt>Patient</dt><dd><code>patient@meditrack.ea</code></dd></div>
+            </dl>
+        </section>
+
         @if ($errors->any())
             <div class="alert alert-error">
                 <ul class="error-list">
