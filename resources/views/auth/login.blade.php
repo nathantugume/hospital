@@ -13,18 +13,52 @@
         @endsession
 
         <div class="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
-            <p class="font-semibold">Tester access</p>
-            <p class="mt-1 text-emerald-800">Use this demo account to explore the system. Please do not enter real patient information.</p>
-            <dl class="mt-3 space-y-1 text-emerald-950">
-                <div class="flex gap-2">
-                    <dt class="font-medium">Email:</dt>
-                    <dd><code>demo.tester@hospital.alwaysdata.net</code></dd>
+            <p class="font-semibold">Demo access</p>
+            <p class="mt-1 text-emerald-800">Use these accounts to explore the different roles. Please do not enter real patient information.</p>
+
+            <div class="mt-4 space-y-4">
+                <div>
+                    <p class="font-semibold text-emerald-950">Patient / tester</p>
+                    <dl class="mt-1 space-y-1 text-emerald-950">
+                        <div class="flex gap-2">
+                            <dt class="font-medium">Email:</dt>
+                            <dd><code class="break-all">demo.tester@hospital.alwaysdata.net</code></dd>
+                        </div>
+                        <div class="flex gap-2">
+                            <dt class="font-medium">Password:</dt>
+                            <dd><code class="break-all">HospitalDemo2026!</code></dd>
+                        </div>
+                    </dl>
                 </div>
-                <div class="flex gap-2">
-                    <dt class="font-medium">Password:</dt>
-                    <dd><code>HospitalDemo2026!</code></dd>
+
+                <div>
+                    <p class="font-semibold text-emerald-950">Patient</p>
+                    <dl class="mt-1 space-y-1 text-emerald-950">
+                        <div class="flex gap-2">
+                            <dt class="font-medium">Email:</dt>
+                            <dd><code class="break-all">demo.patient@hospital.alwaysdata.net</code></dd>
+                        </div>
+                        <div class="flex gap-2">
+                            <dt class="font-medium">Password:</dt>
+                            <dd><code class="break-all">HospitalPatient2026!</code></dd>
+                        </div>
+                    </dl>
                 </div>
-            </dl>
+
+                <div>
+                    <p class="font-semibold text-emerald-950">Administrator</p>
+                    <dl class="mt-1 space-y-1 text-emerald-950">
+                        <div class="flex gap-2">
+                            <dt class="font-medium">Email:</dt>
+                            <dd><code class="break-all">demo.admin@hospital.alwaysdata.net</code></dd>
+                        </div>
+                        <div class="flex gap-2">
+                            <dt class="font-medium">Password:</dt>
+                            <dd><code class="break-all">HospitalAdmin2026!</code></dd>
+                        </div>
+                    </dl>
+                </div>
+            </div>
         </div>
 
         <form method="POST" action="{{ route('login') }}">
