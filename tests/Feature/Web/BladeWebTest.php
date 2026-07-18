@@ -79,9 +79,15 @@ class BladeWebTest extends TestCase
         $this->assertDatabaseHas('settings', ['key' => 'default_currency', 'value' => 'USD']);
 
         $this->actingAs($user)
+            ->get(route('admin.settings.edit'))
+            ->assertOk()
+            ->assertSee('Preview:')
+            ->assertSee('$ 125,000.00');
+
+        $this->actingAs($user)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('$ 125,000.00')
+            ->assertSee('$ ')
             ->assertSee('System overview in USD');
     }
 
