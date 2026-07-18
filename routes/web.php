@@ -1,25 +1,39 @@
 <?php
 
+use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\InvoiceController;
+use App\Http\Controllers\Web\LegacyPageController;
+use App\Http\Controllers\Web\PatientController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-| Serves the static frontend (HTML files in public/) with SPA fallback.
-| The frontend must look and behave exactly as-is.
-*/
+Route::middleware('guest')->group(function (): void {
+    Route::get('/login', [AuthController::class, 'create'])->name('login');
+    Route::post('/login', [AuthController::class, 'store'])
+        ->middleware('throttle:login')
+        ->name('login.store');
+});
 
-// Catch-all: serve the requested static file if it exists, otherwise index.html
-Route::get('/{any}', function () {
-    $path = public_path(request()->path());
-    if (file_exists($path) && is_file($path)) {
-        return response()->file($path);
-    }
-    return response()->file(public_path('index.html'));
-})->where('any', '^(?!api|horizon).*$');
+Route::post('/logout', [AuthController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');
 
-// Root → index.html
-Route::get('/', function () {
-    return response()->file(public_path('index.html'));
+Route::middleware('auth')->group(function (): void {
+    Route::view('/access-denied', 'errors.access-denied')->name('access.denied');
+
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::redirect('/dashboard', '/')->name('dashboard.alias');
+
+    Route::get('/patients', [PatientController::class, 'index'])
+        ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
+        ->name('web.patients.index');
+    Route::get('/invoices', [InvoiceController::class, 'index'])
+        ->middleware('role:super_admin,admin,accountant,insurance_officer')
+        ->name('web.invoices.index');
+
+    Route::redirect('/index.html', '/')->name('legacy.index');
+    Route::redirect('/login.html', '/login')->name('legacy.login');
+    Route::get('/{page}.html', [LegacyPageController::class, 'show'])
+        ->where('page', '[A-Za-z0-9-]+')
+        ->name('legacy.page');
 });

@@ -90,7 +90,7 @@ Route::prefix('v1')->group(function () {
 
     // Email verification (uses signed URLs)
     Route::get('/auth/email/verify/{id}/{hash}', [EmailVerificationController::class, 'verify'])
-        ->middleware(['signed'])->name('verification.verify');
+        ->middleware(['signed'])->name('api.verification.verify');
     Route::post('/auth/email/resend', [EmailVerificationController::class, 'resend'])
         ->middleware(['auth:sanctum', 'throttle:3,1']);
 

@@ -12,12 +12,20 @@ class RoleMiddleware
     {
         $user = $request->user();
         if (! $user) {
+            if (! $request->expectsJson() && ! $request->is('api/*')) {
+                return redirect()->route('login');
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthenticated.',
             ], 401);
         }
         if (! $user->hasRole($roles)) {
+            if (! $request->expectsJson() && ! $request->is('api/*')) {
+                return redirect()->route('access.denied');
+            }
+
             return response()->json([
                 'success' => false,
                 'message' => 'Forbidden. Required role(s): ' . implode(', ', $roles),
