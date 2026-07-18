@@ -383,10 +383,12 @@ php artisan test --filter=PatientCrudTest
 ### CI/CD
 GitHub Actions (`.github/workflows/ci-cd.yml`) runs on every push, pull request, and manual dispatch:
 - **quality** job: PHP 8.3, Composer validation/install, PHP syntax checks, Laravel config/route/view cache validation, the complete PHPUnit suite, and a Composer advisory report
-- **deploy** job: runs after quality for pushes to `main` or manual dispatch, publishes an immutable release to Alwaysdata, migrates the shared SQLite database, caches Laravel configuration/routes/views, and smoke-tests protected home access, login, CSS assets, and API health
+- **deploy** job: runs after quality for pushes to `main` or manual dispatch, publishes an immutable release to Alwaysdata, runs migrations against production MySQL, caches Laravel configuration/routes/views, and smoke-tests protected home access, login, CSS assets, and API health
 
 Configure these GitHub secrets for production deployment:
-`LARAVEL_APP_KEY`, `ALWAYSDATA_SSH_HOST`, `ALWAYSDATA_SSH_USER`, and `ALWAYSDATA_SSH_PASSWORD`.
+`LARAVEL_APP_KEY`, `ALWAYSDATA_SSH_HOST`, `ALWAYSDATA_SSH_USER`, `ALWAYSDATA_SSH_PASSWORD`, `DB_HOST`, `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD`.
+
+CI intentionally uses an in-memory SQLite database for deterministic tests. The deployed application uses MySQL on Alwaysdata; set the `DB_*` secrets to the production database credentials and host.
 
 ## Deployment
 

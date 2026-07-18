@@ -94,31 +94,46 @@ jobs:
       - name: Create production environment file
         env:
           APP_KEY: ${{ secrets.LARAVEL_APP_KEY }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           test -n "$APP_KEY"
-          printf '%s\n' \
-            'APP_NAME=MediTrack HMS' \
-            'APP_ENV=production' \
-            'APP_DEBUG=false' \
-            "APP_KEY=$APP_KEY" \
-            "APP_URL=${APP_URL}" \
-            "ASSET_URL=${APP_URL}" \
-            "FRONTEND_URL=${APP_URL}" \
-            'APP_TIMEZONE=Africa/Kampala' \
-            'DB_CONNECTION=sqlite' \
-            'DB_DATABASE=/home/hospital/shared/meditrack/database.sqlite' \
-            'CACHE_STORE=file' \
-            'SESSION_DRIVER=file' \
-            'QUEUE_CONNECTION=sync' \
-            'MAIL_MAILER=log' \
-            'ENABLE_SMS_NOTIFICATIONS=false' \
-            'ENABLE_MOBILE_MONEY=false' \
-            'ENABLE_INSURANCE_INTEGRATION=false' \
-            'ENABLE_ID_VERIFICATION=false' \
-            'ENABLE_LIS_INTEGRATION=false' \
-            'ENABLE_PHARMACY_SUPPLY_CHAIN=false' \
-            'ENABLE_AMBULANCE_GPS=false' \
-            'ENABLE_TWILIO_EMERGENCY=false' > /tmp/meditrack.env
+          test -n "$DB_HOST"
+          test -n "$DB_DATABASE"
+          test -n "$DB_USERNAME"
+          test -n "$DB_PASSWORD"
+          escape_dotenv() { printf '%s' "$1" | sed 's/[\\"]/\\&/g'; }
+          {
+            printf '%s\n' \
+              'APP_NAME=MediTrack HMS' \
+              'APP_ENV=production' \
+              'APP_DEBUG=false' \
+              "APP_KEY=$APP_KEY" \
+              "APP_URL=${APP_URL}" \
+              "ASSET_URL=${APP_URL}" \
+              "FRONTEND_URL=${APP_URL}" \
+              'APP_TIMEZONE=Africa/Kampala' \
+              'DB_CONNECTION=mysql' \
+              'DB_PORT=3306' \
+              'CACHE_STORE=file' \
+              'SESSION_DRIVER=file' \
+              'QUEUE_CONNECTION=sync' \
+              'MAIL_MAILER=log' \
+              'ENABLE_SMS_NOTIFICATIONS=false' \
+              'ENABLE_MOBILE_MONEY=false' \
+              'ENABLE_INSURANCE_INTEGRATION=false' \
+              'ENABLE_ID_VERIFICATION=false' \
+              'ENABLE_LIS_INTEGRATION=false' \
+              'ENABLE_PHARMACY_SUPPLY_CHAIN=false' \
+              'ENABLE_AMBULANCE_GPS=false' \
+              'ENABLE_TWILIO_EMERGENCY=false'
+            printf 'DB_HOST=%s\n' "$(escape_dotenv "$DB_HOST")"
+            printf 'DB_DATABASE=%s\n' "$(escape_dotenv "$DB_DATABASE")"
+            printf 'DB_USERNAME=%s\n' "$(escape_dotenv "$DB_USERNAME")"
+            printf 'DB_PASSWORD="%s"\n' "$(escape_dotenv "$DB_PASSWORD")"
+          } > /tmp/meditrack.env
 
       - name: Package release
         run: |
@@ -175,7 +190,6 @@ jobs:
           mkdir -p "$RELEASE/bootstrap/cache"
           rm -rf "$RELEASE/storage"
           ln -s "$SHARED/storage" "$RELEASE/storage"
-          touch "$SHARED/database.sqlite"
 
           cd "$RELEASE"
           /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-blocking --ignore-platform-req=ext-pcntl
