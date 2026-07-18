@@ -40,7 +40,7 @@ jobs:
 
       - name: Install PHP dependencies
         # The source lockfile currently contains Laravel 11 releases flagged by Composer advisories.
-        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-blocking
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-security-blocking
 
       - name: Prepare test environment
         run: |
@@ -162,7 +162,7 @@ jobs:
           touch "$SHARED/database.sqlite"
 
           cd "$RELEASE"
-          /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-blocking
+          /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-security-blocking --ignore-platform-req=ext-pcntl
           /usr/bin/php artisan migrate --force
           /usr/bin/php artisan optimize:clear
           /usr/bin/php artisan config:cache
