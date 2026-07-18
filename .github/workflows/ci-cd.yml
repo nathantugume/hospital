@@ -58,7 +58,7 @@ jobs:
 
       - name: Report dependency advisories
         continue-on-error: true
-        run: composer audit --no-blocking --format=summary
+        run: composer audit --format=summary
 
   deploy:
     name: Deploy to Alwaysdata
