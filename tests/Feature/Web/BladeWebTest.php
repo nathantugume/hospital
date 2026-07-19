@@ -130,10 +130,28 @@ class BladeWebTest extends TestCase
     {
         $user = User::factory()->admin()->create();
 
-        $this->actingAs($user)
+        $response = $this->actingAs($user)
             ->get('/appointments.html')
             ->assertOk()
-            ->assertSee('Appointments');
+            ->assertSee('Appointments')
+            ->assertSee('Care operations')
+            ->assertSee('data-menu-toggle');
+
+        $this->assertSame(1, substr_count($response->getContent(), '<!doctype html>'));
+        $this->assertSame(1, substr_count($response->getContent(), '<aside class="app-sidebar"'));
+
+        $this->actingAs($user)
+            ->get('/financial-reports.html')
+            ->assertOk()
+            ->assertSee('Financial Reports')
+            ->assertSee('apexcharts');
+
+        $this->actingAs($user)
+            ->get('/radiology-viewer.html')
+            ->assertOk()
+            ->assertSee('seriesPanel')
+            ->assertSee('toolsPanel')
+            ->assertSee('data-menu-toggle');
     }
 
     public function test_invalid_browser_credentials_return_to_login_with_errors(): void
