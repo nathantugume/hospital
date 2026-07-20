@@ -64,7 +64,7 @@
             </div>
         </div>
         <div class="rounded-lg border bg-background shadow-sm">
-            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Prescriptions to fill</h2><a href="{{ url('/prescriptions.html') }}" class="text-sm text-indigo-600 hover:text-indigo-700">All prescriptions</a></div>
+            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Prescriptions to fill</h2><span class="text-sm text-gray-400 cursor-not-allowed" title="Coming soon">All prescriptions</span></div>
             <div class="overflow-x-auto">
                 @if ($recentPrescriptions->isEmpty())
                     <div class="text-center py-8 text-gray-500">No prescriptions are awaiting action.</div>

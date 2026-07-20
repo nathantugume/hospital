@@ -41,7 +41,7 @@
 
             <div class="nav-label">Finance</div>
             <a class="nav-link {{ request()->routeIs('web.invoices.*') ? 'active' : '' }}" href="{{ route('web.invoices.index') }}"><span class="nav-icon" aria-hidden="true">▤</span><span>Invoices</span></a>
-            <a class="nav-link {{ request()->is('financial-reports.html') ? 'active' : '' }}" href="{{ url('/financial-reports.html') }}"><span class="nav-icon" aria-hidden="true">▥</span><span>Reports</span></a>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">▥</span><span>Reports</span><span class="soon-badge">Soon</span></span>
 
             <div class="nav-label">Administration</div>
             <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.edit') }}"><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span></a>
@@ -52,7 +52,7 @@
             <div class="nav-label">Clinical</div>
             <a class="nav-link {{ request()->routeIs('web.appointments.*') ? 'active' : '' }}" href="{{ route('web.appointments.index') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>My schedule</span></a>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>My patients</span></a>
-            <a class="nav-link" href="{{ url('/create-prescription.html') }}"><span class="nav-icon" aria-hidden="true">℞</span><span>Write prescription</span></a>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">℞</span><span>Write prescription</span><span class="soon-badge">Soon</span></span>
             <a class="nav-link {{ request()->routeIs('web.laboratory.*') ? 'active' : '' }}" href="{{ route('web.laboratory.index') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Laboratory</span></a>
         @elseif ($navUser->isNurse())
             <div class="nav-label">Workspace</div>
@@ -78,8 +78,8 @@
 
             <div class="nav-label">Laboratory</div>
             <a class="nav-link {{ request()->routeIs('web.laboratory.*') ? 'active' : '' }}" href="{{ route('web.laboratory.index') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Requests and results</span></a>
-            <a class="nav-link" href="{{ url('/test-requests.html') }}"><span class="nav-icon" aria-hidden="true">▧</span><span>Test requests</span></a>
-            <a class="nav-link" href="{{ url('/lab-equipment.html') }}"><span class="nav-icon" aria-hidden="true">⚙</span><span>Lab equipment</span></a>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">▧</span><span>Test requests</span><span class="soon-badge">Soon</span></span>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">⚙</span><span>Lab equipment</span><span class="soon-badge">Soon</span></span>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
         @elseif ($navUser->isPharmacist())
             <div class="nav-label">Workspace</div>
@@ -87,8 +87,8 @@
 
             <div class="nav-label">Pharmacy</div>
             <a class="nav-link {{ request()->routeIs('web.pharmacy.*') ? 'active' : '' }}" href="{{ route('web.pharmacy.index') }}"><span class="nav-icon" aria-hidden="true">▣</span><span>Inventory</span></a>
-            <a class="nav-link" href="{{ url('/prescriptions.html') }}"><span class="nav-icon" aria-hidden="true">℞</span><span>Prescriptions</span></a>
-            <a class="nav-link" href="{{ url('/stock-alerts.html') }}"><span class="nav-icon" aria-hidden="true">!</span><span>Stock alerts</span></a>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">℞</span><span>Prescriptions</span><span class="soon-badge">Soon</span></span>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">!</span><span>Stock alerts</span><span class="soon-badge">Soon</span></span>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
         @elseif ($navUser->isAccountant() || $navUser->isInsuranceOfficer())
             <div class="nav-label">Workspace</div>
@@ -96,17 +96,17 @@
 
             <div class="nav-label">Finance</div>
             <a class="nav-link {{ request()->routeIs('web.invoices.*') ? 'active' : '' }}" href="{{ route('web.invoices.index') }}"><span class="nav-icon" aria-hidden="true">▤</span><span>Invoices</span></a>
-            <a class="nav-link" href="{{ url('/insurance-claims.html') }}"><span class="nav-icon" aria-hidden="true">❖</span><span>Insurance claims</span></a>
-            <a class="nav-link" href="{{ url('/financial-reports.html') }}"><span class="nav-icon" aria-hidden="true">▥</span><span>Reports</span></a>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">❖</span><span>Insurance claims</span><span class="soon-badge">Soon</span></span>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">▥</span><span>Reports</span><span class="soon-badge">Soon</span></span>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
         @elseif ($navUser->isPatient())
             <div class="nav-label">My care</div>
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
-            <a class="nav-link" href="{{ url('/patient-dashboard.html') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>My record</span></a>
             <a class="nav-link {{ request()->routeIs('web.appointments.*') ? 'active' : '' }}" href="{{ route('web.appointments.index') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>Appointments</span></a>
-            <a class="nav-link" href="{{ url('/prescriptions.html') }}"><span class="nav-icon" aria-hidden="true">℞</span><span>Prescriptions</span></a>
-            <a class="nav-link" href="{{ url('/lab-results.html') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Lab results</span></a>
-            <a class="nav-link" href="{{ url('/billing.html') }}"><span class="nav-icon" aria-hidden="true">▤</span><span>Billing</span></a>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">◉</span><span>My record</span><span class="soon-badge">Soon</span></span>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">℞</span><span>Prescriptions</span><span class="soon-badge">Soon</span></span>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">◇</span><span>Lab results</span><span class="soon-badge">Soon</span></span>
+            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">▤</span><span>Billing</span><span class="soon-badge">Soon</span></span>
         @else
             <div class="nav-label">Workspace</div>
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>

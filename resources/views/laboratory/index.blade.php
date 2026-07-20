@@ -10,7 +10,7 @@
             <h1 class="text-2xl lg:text-3xl font-bold tracking-tight">Laboratory</h1>
             <p class="text-gray-500">Track test requests, result readiness, and urgent work in the lab.</p>
         </div>
-        <a href="{{ url('/test-requests.html') }}" class="inline-flex items-center justify-center rounded-md bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2 text-sm shadow-sm">+ New test request</a>
+        <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ New test request <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
     </div>
 
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -38,7 +38,7 @@
 
     <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-lg border bg-background shadow-sm">
-            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Recent test requests</h2><a href="{{ url('/test-requests.html') }}" class="text-sm text-indigo-600 hover:text-indigo-700">Open queue</a></div>
+            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Recent test requests</h2><span class="text-sm text-gray-400 cursor-not-allowed" title="Coming soon">Open queue</span></div>
             <div class="overflow-x-auto">
                 @if ($requests->isEmpty())
                     <div class="text-center py-8 text-gray-500">No test requests are available.</div>
@@ -70,7 +70,7 @@
             </div>
         </div>
         <div class="rounded-lg border bg-background shadow-sm">
-            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Latest lab results</h2><a href="{{ url('/lab-results.html') }}" class="text-sm text-indigo-600 hover:text-indigo-700">View results</a></div>
+            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Latest lab results</h2><span class="text-sm text-gray-400 cursor-not-allowed" title="Coming soon">View results</span></div>
             <div class="overflow-x-auto">
                 @if ($results->isEmpty())
                     <div class="text-center py-8 text-gray-500">No lab results are available.</div>

@@ -10,7 +10,7 @@
             <h1 class="text-2xl lg:text-3xl font-bold tracking-tight mb-2 text-gray-900">Pharmacy</h1>
             <p class="text-gray-500">Monitor medicine stock, expiry risk, and prescription activity.</p>
         </div>
-        <a href="{{ url('/add-medicine.html') }}" class="inline-flex items-center justify-center rounded-md text-sm font-medium bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2">+ Add medicine</a>
+        <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ Add medicine <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -50,7 +50,7 @@
 
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="rounded-lg border bg-background shadow-sm lg:col-span-2">
-            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-xl font-semibold">{{ number_format($medicines->total()) }} medicines</h2><a href="{{ url('/stock-alerts.html') }}" class="text-sm text-indigo-600 hover:text-indigo-700">Stock alerts</a></div>
+            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-xl font-semibold">{{ number_format($medicines->total()) }} medicines</h2><span class="text-sm text-gray-400 cursor-not-allowed" title="Coming soon">Stock alerts</span></div>
             <div class="overflow-x-auto">
                 @if ($medicines->isEmpty())
                     <div class="text-center py-8 text-gray-500">No medicines match the selected filters.</div>
@@ -90,7 +90,7 @@
             @include('partials.pagination', ['paginator' => $medicines, 'label' => 'medicines'])
         </div>
         <div class="rounded-lg border bg-background shadow-sm">
-            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-xl font-semibold">Recent activity</h2><a href="{{ url('/prescriptions.html') }}" class="text-sm text-indigo-600 hover:text-indigo-700">All prescriptions</a></div>
+            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-xl font-semibold">Recent activity</h2><span class="text-sm text-gray-400 cursor-not-allowed" title="Coming soon">All prescriptions</span></div>
             <div class="overflow-x-auto">
                 @if ($recentPrescriptions->isEmpty())
                     <div class="text-center py-8 text-gray-500">No prescriptions are available.</div>

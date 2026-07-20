@@ -10,7 +10,7 @@
             <h1 class="text-2xl lg:text-3xl font-bold tracking-tight mb-2">Patients</h1>
             <p class="text-gray-500">Manage your patients and their medical records.</p>
         </div>
-        <a href="{{ url('/add-patient.html') }}" class="inline-flex items-center justify-center rounded-md bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2 text-sm shadow-sm">+ Add Patient</a>
+        <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ Add Patient <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
     </div>
 
     <div class="rounded-lg border bg-background shadow-sm">

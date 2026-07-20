@@ -11,7 +11,7 @@
             <p class="text-gray-500">Find clinicians and staff by department, role, and availability.</p>
         </div>
         @if (auth()->user()->isAdmin())
-            <a href="{{ url('/add-staff.html') }}" class="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2 text-sm shadow-sm">+ Add staff member</a>
+            <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ Add staff member <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
         @endif
     </div>
 

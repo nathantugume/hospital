@@ -10,7 +10,7 @@
             <h1 class="text-2xl lg:text-3xl font-bold tracking-tight">Invoices</h1>
             <p class="text-gray-500">Review patient billing and outstanding balances.</p>
         </div>
-        <a href="{{ url('/create-invoice.html') }}" class="inline-flex items-center gap-2 rounded-md bg-primary text-white px-4 py-2 text-sm hover:bg-primary/90">+ Create invoice</a>
+        <span class="inline-flex items-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ Create invoice <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
     </div>
 
     <div class="grid gap-4 md:grid-cols-4">

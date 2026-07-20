@@ -148,15 +148,14 @@ class BladeWebTest extends TestCase
             ->assertRedirect(route('access.denied'));
     }
 
-    public function test_legacy_screen_is_rendered_by_laravel_as_a_blade_view(): void
+    public function test_legacy_html_pages_show_a_coming_soon_placeholder(): void
     {
         $user = User::factory()->admin()->create();
 
         $response = $this->actingAs($user)
-            ->get('/appointments.html')
+            ->get('/appointment-calendar.html')
             ->assertOk()
-            ->assertSee('Appointments')
-            ->assertSee('Care operations')
+            ->assertSee('Appointment Calendar is coming soon')
             ->assertSee('data-menu-toggle');
 
         $this->assertSame(1, substr_count($response->getContent(), '<!doctype html>'));
@@ -165,15 +164,12 @@ class BladeWebTest extends TestCase
         $this->actingAs($user)
             ->get('/financial-reports.html')
             ->assertOk()
-            ->assertSee('Financial Reports')
-            ->assertSee('apexcharts');
+            ->assertSee('Financial Reports is coming soon')
+            ->assertDontSee('apexcharts');
 
         $this->actingAs($user)
-            ->get('/radiology-viewer.html')
-            ->assertOk()
-            ->assertSee('seriesPanel')
-            ->assertSee('toolsPanel')
-            ->assertSee('data-menu-toggle');
+            ->get('/not-a-real-legacy-page.html')
+            ->assertNotFound();
     }
 
     public function test_invalid_browser_credentials_return_to_login_with_errors(): void
