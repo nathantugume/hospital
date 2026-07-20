@@ -3,7 +3,10 @@
 namespace Tests\Feature\Web;
 
 use App\Models\Invoice;
+use App\Models\Medicine;
 use App\Models\Patient;
+use App\Models\Prescription;
+use App\Models\Staff;
 use App\Models\User;
 use Tests\TestCase;
 
@@ -109,6 +112,64 @@ class BladeWebTest extends TestCase
 
         $this->actingAs($doctor)
             ->get(route('web.reports.financial'))
+            ->assertRedirect(route('access.denied'));
+    }
+
+    public function test_doctor_can_create_a_real_prescription_for_a_patient(): void
+    {
+        $staff = Staff::create([
+            'code' => 'ST-TEST-1',
+            'first_name' => 'Test',
+            'last_name' => 'Doctor',
+            'email' => 'test.doctor@example.com',
+            'role' => 'doctor',
+        ]);
+        $doctor = User::factory()->doctor()->create(['staff_id' => $staff->id]);
+        $patient = Patient::factory()->create();
+        $medicine = Medicine::create([
+            'code' => 'MED-TEST-1',
+            'name' => 'Test Amoxicillin 500mg',
+        ]);
+
+        $this->actingAs($doctor)
+            ->get(route('web.prescriptions.create', ['patient_id' => $patient->id]))
+            ->assertOk()
+            ->assertSee('Create Prescription')
+            ->assertSee('Test Amoxicillin');
+
+        $this->actingAs($doctor)
+            ->post(route('web.prescriptions.store'), [
+                'patient_id' => $patient->id,
+                'date' => now()->toDateString(),
+                'refills' => 2,
+                'notes' => 'Follow up in two weeks.',
+                'items' => [
+                    [
+                        'medicine_id' => $medicine->id,
+                        'medication' => 'Test Amoxicillin 500mg',
+                        'dosage' => '500mg',
+                        'frequency' => 'Twice daily',
+                        'route' => 'Oral',
+                        'duration' => 7,
+                        'duration_unit' => 'Days',
+                        'instructions' => 'Take with food',
+                    ],
+                ],
+            ])
+            ->assertRedirect(route('dashboard'));
+
+        $prescription = Prescription::where('patient_id', $patient->id)->first();
+        $this->assertNotNull($prescription);
+        $this->assertSame($staff->id, $prescription->doctor_id);
+        $this->assertSame(2, $prescription->refills);
+        $this->assertSame('Active', $prescription->status);
+        $this->assertSame(1, $prescription->items()->count());
+        $this->assertSame('500mg', $prescription->items()->first()->dosage);
+
+        $receptionist = User::factory()->create(['role' => 'receptionist']);
+
+        $this->actingAs($receptionist)
+            ->get(route('web.prescriptions.create'))
             ->assertRedirect(route('access.denied'));
     }
 

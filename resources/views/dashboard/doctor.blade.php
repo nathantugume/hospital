@@ -72,7 +72,7 @@
 
     <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-lg border bg-background shadow-sm">
-            <div class="p-4 border-b"><h2 class="text-lg font-semibold">Recent prescriptions</h2></div>
+            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Recent prescriptions</h2><a href="{{ route('web.prescriptions.create') }}" class="text-sm text-indigo-600 hover:text-indigo-700">+ New</a></div>
             <div class="overflow-x-auto">
                 @if ($recentPrescriptions->isEmpty())
                     <div class="text-center py-8 text-gray-500">No prescriptions written yet.</div>

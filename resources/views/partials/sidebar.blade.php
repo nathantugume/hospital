@@ -52,7 +52,7 @@
             <div class="nav-label">Clinical</div>
             <a class="nav-link {{ request()->routeIs('web.appointments.*') ? 'active' : '' }}" href="{{ route('web.appointments.index') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>My schedule</span></a>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>My patients</span></a>
-            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">℞</span><span>Write prescription</span><span class="soon-badge">Soon</span></span>
+            <a class="nav-link {{ request()->routeIs('web.prescriptions.*') ? 'active' : '' }}" href="{{ route('web.prescriptions.create') }}"><span class="nav-icon" aria-hidden="true">℞</span><span>Write prescription</span></a>
             <a class="nav-link {{ request()->routeIs('web.laboratory.*') ? 'active' : '' }}" href="{{ route('web.laboratory.index') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Laboratory</span></a>
         @elseif ($navUser->isNurse())
             <div class="nav-label">Workspace</div>
