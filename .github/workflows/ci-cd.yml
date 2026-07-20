@@ -109,7 +109,7 @@ jobs:
           escape_dotenv() { printf '%s' "$1" | sed 's/[\\"]/\\&/g'; }
           {
             printf '%s\n' \
-              'APP_NAME=MediTrack HMS' \
+              'APP_NAME="MediTrack HMS"' \
               'APP_ENV=production' \
               'APP_DEBUG=false' \
               "APP_KEY=$APP_KEY" \
@@ -131,9 +131,9 @@ jobs:
               'ENABLE_PHARMACY_SUPPLY_CHAIN=false' \
               'ENABLE_AMBULANCE_GPS=false' \
               'ENABLE_TWILIO_EMERGENCY=false'
-            printf 'DB_HOST=%s\n' "$(escape_dotenv "$DB_HOST")"
-            printf 'DB_DATABASE=%s\n' "$(escape_dotenv "$DB_DATABASE")"
-            printf 'DB_USERNAME=%s\n' "$(escape_dotenv "$DB_USERNAME")"
+            printf 'DB_HOST="%s"\n' "$(escape_dotenv "$DB_HOST")"
+            printf 'DB_DATABASE="%s"\n' "$(escape_dotenv "$DB_DATABASE")"
+            printf 'DB_USERNAME="%s"\n' "$(escape_dotenv "$DB_USERNAME")"
             printf 'DB_PASSWORD="%s"\n' "$(escape_dotenv "$DB_PASSWORD")"
           } > /tmp/meditrack.env
 
