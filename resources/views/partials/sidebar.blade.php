@@ -22,10 +22,10 @@
             @if (Route::has('web.patients.index'))
                 <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
             @endif
-            <a class="nav-link {{ request()->is('appointments.html') ? 'active' : '' }}" href="{{ url('/appointments.html') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>Appointments</span></a>
-            <a class="nav-link {{ request()->is('doctors.html') ? 'active' : '' }}" href="{{ url('/doctors.html') }}"><span class="nav-icon" aria-hidden="true">✚</span><span>Care team</span></a>
-            <a class="nav-link {{ request()->is('lab-dashboard.html') ? 'active' : '' }}" href="{{ url('/lab-dashboard.html') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Laboratory</span></a>
-            <a class="nav-link {{ request()->is('medicine.html') ? 'active' : '' }}" href="{{ url('/medicine.html') }}"><span class="nav-icon" aria-hidden="true">▣</span><span>Pharmacy</span></a>
+            <a class="nav-link {{ request()->routeIs('web.appointments.*') ? 'active' : '' }}" href="{{ route('web.appointments.index') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>Appointments</span></a>
+            <a class="nav-link {{ request()->routeIs('web.staff.*') ? 'active' : '' }}" href="{{ route('web.staff.index') }}"><span class="nav-icon" aria-hidden="true">✚</span><span>Care team</span></a>
+            <a class="nav-link {{ request()->routeIs('web.laboratory.*') ? 'active' : '' }}" href="{{ route('web.laboratory.index') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Laboratory</span></a>
+            <a class="nav-link {{ request()->routeIs('web.pharmacy.*') ? 'active' : '' }}" href="{{ route('web.pharmacy.index') }}"><span class="nav-icon" aria-hidden="true">▣</span><span>Pharmacy</span></a>
 
             <div class="nav-label">Finance</div>
             @if (Route::has('web.invoices.index'))
@@ -42,15 +42,15 @@
             @if (Route::has('web.patients.index') && auth()->user()->hasRole(['doctor', 'nurse', 'receptionist', 'lab_technician', 'pharmacist', 'accountant', 'insurance_officer']))
                 <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
             @endif
-            <a class="nav-link" href="{{ url('/appointments.html') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>Appointments</span></a>
-            <a class="nav-link" href="{{ url('/doctors.html') }}"><span class="nav-icon" aria-hidden="true">✚</span><span>Care team</span></a>
-            <a class="nav-link" href="{{ url('/lab-dashboard.html') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Laboratory</span></a>
-            <a class="nav-link" href="{{ url('/medicine.html') }}"><span class="nav-icon" aria-hidden="true">▣</span><span>Pharmacy</span></a>
+            <a class="nav-link {{ request()->routeIs('web.appointments.*') ? 'active' : '' }}" href="{{ route('web.appointments.index') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>Appointments</span></a>
+            <a class="nav-link {{ request()->routeIs('web.staff.*') ? 'active' : '' }}" href="{{ route('web.staff.index') }}"><span class="nav-icon" aria-hidden="true">✚</span><span>Care team</span></a>
+            <a class="nav-link {{ request()->routeIs('web.laboratory.*') ? 'active' : '' }}" href="{{ route('web.laboratory.index') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Laboratory</span></a>
+            <a class="nav-link {{ request()->routeIs('web.pharmacy.*') ? 'active' : '' }}" href="{{ route('web.pharmacy.index') }}"><span class="nav-icon" aria-hidden="true">▣</span><span>Pharmacy</span></a>
         @else
             <div class="nav-label">My care</div>
             <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}"><span class="nav-icon" aria-hidden="true">⌂</span><span>Dashboard</span></a>
             <a class="nav-link" href="{{ url('/patient-dashboard.html') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>My record</span></a>
-            <a class="nav-link" href="{{ url('/appointments.html') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>Appointments</span></a>
+            <a class="nav-link {{ request()->routeIs('web.appointments.*') ? 'active' : '' }}" href="{{ route('web.appointments.index') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>Appointments</span></a>
             <a class="nav-link" href="{{ url('/prescriptions.html') }}"><span class="nav-icon" aria-hidden="true">▣</span><span>Prescriptions</span></a>
         @endif
     </nav>

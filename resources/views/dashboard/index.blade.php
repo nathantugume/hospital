@@ -32,7 +32,7 @@
     <section class="panel">
         <div class="panel-header">
             <h2>Upcoming appointments</h2>
-            <a class="button button-primary" href="{{ url('/appointments.html') }}">Open schedule</a>
+            <a class="button button-primary" href="{{ route('web.appointments.index') }}">Open schedule</a>
         </div>
         <div class="panel-body table-wrap">
             @if ($upcomingAppointments->isEmpty())

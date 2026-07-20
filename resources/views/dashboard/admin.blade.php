@@ -35,7 +35,7 @@
         <span><strong>Register patient</strong><small>Start a new record</small></span>
         <span class="quick-action-arrow" aria-hidden="true">→</span>
     </a>
-    <a class="quick-action" href="{{ url('/appointments.html') }}">
+    <a class="quick-action" href="{{ route('web.appointments.index') }}">
         <span class="quick-action-icon" aria-hidden="true">◷</span>
         <span><strong>Open appointments</strong><small>Review today’s schedule</small></span>
         <span class="quick-action-arrow" aria-hidden="true">→</span>
@@ -69,7 +69,7 @@
     <section class="panel">
         <div class="panel-header">
             <div><span class="panel-kicker">Today</span><h2>Workload by status</h2></div>
-            <a class="text-link" href="{{ url('/appointments.html') }}">Open schedule <span aria-hidden="true">→</span></a>
+            <a class="text-link" href="{{ route('web.appointments.index') }}">Open schedule <span aria-hidden="true">→</span></a>
         </div>
         <div class="panel-body workload-list">
             @if ($appointmentStatus->isEmpty())
@@ -88,7 +88,7 @@
     <section class="panel">
         <div class="panel-header">
             <div><span class="panel-kicker">Next up</span><h2>Upcoming appointments</h2></div>
-            <a class="text-link" href="{{ url('/appointments.html') }}" aria-label="View all appointments">View all <span aria-hidden="true">→</span></a>
+            <a class="text-link" href="{{ route('web.appointments.index') }}" aria-label="View all appointments">View all <span aria-hidden="true">→</span></a>
         </div>
         <div class="panel-body table-wrap">
             @if ($upcomingAppointments->isEmpty())

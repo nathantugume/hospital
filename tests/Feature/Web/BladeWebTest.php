@@ -64,6 +64,24 @@ class BladeWebTest extends TestCase
             ->assertSee('Invoices');
     }
 
+    public function test_admin_can_view_native_operational_pages(): void
+    {
+        $user = User::factory()->admin()->create();
+
+        $pages = [
+            [route('web.appointments.index'), 'Appointments'],
+            [route('web.staff.index'), 'Care team'],
+            [route('web.laboratory.index'), 'Laboratory'],
+            [route('web.pharmacy.index'), 'Pharmacy'],
+        ];
+
+        foreach ($pages as [$url, $heading]) {
+            $response = $this->actingAs($user)->get($url)->assertOk()->assertSee($heading);
+
+            $this->assertSame(1, substr_count($response->getContent(), '<aside class="app-sidebar"'));
+        }
+    }
+
     public function test_admin_can_change_currency_from_settings_and_dashboard_uses_it(): void
     {
         $user = User::factory()->admin()->create();

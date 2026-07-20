@@ -1,11 +1,15 @@
 <?php
 
 use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\AppointmentController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\InvoiceController;
+use App\Http\Controllers\Web\LabController;
 use App\Http\Controllers\Web\LegacyPageController;
+use App\Http\Controllers\Web\PharmacyController;
 use App\Http\Controllers\Web\PatientController;
 use App\Http\Controllers\Web\SettingsController;
+use App\Http\Controllers\Web\StaffController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function (): void {
@@ -44,6 +48,15 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/patients', [PatientController::class, 'index'])
         ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
         ->name('web.patients.index');
+    Route::get('/appointments', [AppointmentController::class, 'index'])
+        ->name('web.appointments.index');
+    Route::get('/care-team', [StaffController::class, 'index'])
+        ->name('web.staff.index');
+    Route::get('/laboratory', [LabController::class, 'index'])
+        ->name('web.laboratory.index');
+    Route::get('/pharmacy', [PharmacyController::class, 'index'])
+        ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
+        ->name('web.pharmacy.index');
     Route::get('/invoices', [InvoiceController::class, 'index'])
         ->middleware('role:super_admin,admin,accountant,insurance_officer')
         ->name('web.invoices.index');
