@@ -8,6 +8,7 @@ use App\Http\Controllers\Web\LabController;
 use App\Http\Controllers\Web\LegacyPageController;
 use App\Http\Controllers\Web\PharmacyController;
 use App\Http\Controllers\Web\PatientController;
+use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\StaffController;
 use Illuminate\Support\Facades\Route;
@@ -60,6 +61,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/invoices', [InvoiceController::class, 'index'])
         ->middleware('role:super_admin,admin,accountant,insurance_officer')
         ->name('web.invoices.index');
+    Route::get('/reports/financial', [ReportController::class, 'financial'])
+        ->middleware('role:super_admin,admin,accountant,insurance_officer')
+        ->name('web.reports.financial');
 
     Route::redirect('/index.html', '/')->name('legacy.index');
     Route::get('/{page}.html', [LegacyPageController::class, 'show'])

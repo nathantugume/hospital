@@ -41,7 +41,7 @@
 
             <div class="nav-label">Finance</div>
             <a class="nav-link {{ request()->routeIs('web.invoices.*') ? 'active' : '' }}" href="{{ route('web.invoices.index') }}"><span class="nav-icon" aria-hidden="true">▤</span><span>Invoices</span></a>
-            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">▥</span><span>Reports</span><span class="soon-badge">Soon</span></span>
+            <a class="nav-link {{ request()->routeIs('web.reports.*') ? 'active' : '' }}" href="{{ route('web.reports.financial') }}"><span class="nav-icon" aria-hidden="true">▥</span><span>Reports</span></a>
 
             <div class="nav-label">Administration</div>
             <a class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}" href="{{ route('admin.settings.edit') }}"><span class="nav-icon" aria-hidden="true">⚙</span><span>Settings</span></a>

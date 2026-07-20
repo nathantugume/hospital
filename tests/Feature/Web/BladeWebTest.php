@@ -82,6 +82,36 @@ class BladeWebTest extends TestCase
         }
     }
 
+    public function test_admin_can_view_financial_reports_with_real_invoice_data(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $patient = Patient::factory()->create(['first_name' => 'Reporting', 'last_name' => 'Testcase']);
+        Invoice::factory()->create([
+            'patient_id' => $patient->id,
+            'code' => 'INV-REPORT-1',
+            'date' => now()->toDateString(),
+            'amount' => 40000,
+            'paid_amount' => 40000,
+            'balance' => 0,
+            'status' => 'Paid',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('web.reports.financial', ['from' => now()->toDateString(), 'to' => now()->toDateString()]))
+            ->assertOk()
+            ->assertSee('Financial Reports')
+            ->assertSee('Reporting')
+            ->assertSee('Testcase')
+            ->assertSee('Total invoiced')
+            ->assertSee(now()->format('M Y'));
+
+        $doctor = User::factory()->doctor()->create();
+
+        $this->actingAs($doctor)
+            ->get(route('web.reports.financial'))
+            ->assertRedirect(route('access.denied'));
+    }
+
     public function test_admin_can_change_currency_from_settings_and_dashboard_uses_it(): void
     {
         $user = User::factory()->admin()->create();
