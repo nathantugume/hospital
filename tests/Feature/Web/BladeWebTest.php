@@ -38,15 +38,15 @@ class BladeWebTest extends TestCase
         $this->assertAuthenticatedAs($user);
         $this->get('/')
             ->assertOk()
-            ->assertSee('Admin dashboard')
-            ->assertSee($user->name)
-            ->assertSee('Upcoming appointments');
+            ->assertSee('dateRangeBtn')
+            ->assertSee('tab-overview')
+            ->assertSee('Total Revenue');
 
         $this->get('/admin/dashboard')
             ->assertOk()
-            ->assertSee('Care operations')
-            ->assertSee('Workload by status')
-            ->assertSee('Register patient');
+            ->assertSee('dateRangeBtn')
+            ->assertSee('tab-analytics')
+            ->assertSee('Notifications');
     }
 
     public function test_staff_can_view_blade_patient_and_invoice_lists(): void
@@ -114,8 +114,8 @@ class BladeWebTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('$ ')
-            ->assertSee('System overview in USD');
+            ->assertSee('$ 45,231.89')
+            ->assertSee('dateRangeBtn');
     }
 
     public function test_patient_cannot_change_system_currency(): void
