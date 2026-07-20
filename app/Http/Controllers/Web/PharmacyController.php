@@ -35,4 +35,30 @@ class PharmacyController extends Controller
 
         return view('pharmacy.index', compact('medicines', 'stats', 'recentPrescriptions'));
     }
+
+    public function alerts(Request $request): View
+    {
+        $type = $request->string('type')->trim()->value() ?: 'all';
+
+        $stats = [
+            'low_stock' => Medicine::whereColumn('stock', '<=', 'reorder_level')->where('stock', '>', 0)->count(),
+            'out_of_stock' => Medicine::where('stock', '<=', 0)->count(),
+            'expiring' => Medicine::whereNotNull('expiry')->whereBetween('expiry', [today(), today()->addDays(30)])->count(),
+            'catalogue' => Medicine::count(),
+        ];
+
+        $alerts = Medicine::query()
+            ->where(function ($query): void {
+                $query->whereColumn('stock', '<=', 'reorder_level')
+                    ->orWhereBetween('expiry', [today(), today()->addDays(30)]);
+            })
+            ->when($type === 'low', fn ($query) => $query->whereColumn('stock', '<=', 'reorder_level')->where('stock', '>', 0))
+            ->when($type === 'out', fn ($query) => $query->where('stock', '<=', 0))
+            ->when($type === 'expiring', fn ($query) => $query->whereNotNull('expiry')->whereBetween('expiry', [today(), today()->addDays(30)]))
+            ->orderBy('stock')
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('pharmacy.alerts', compact('alerts', 'stats', 'type'));
+    }
 }

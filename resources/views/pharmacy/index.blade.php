@@ -50,7 +50,7 @@
 
     <div class="grid gap-6 lg:grid-cols-3">
         <div class="rounded-lg border bg-background shadow-sm lg:col-span-2">
-            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-xl font-semibold">{{ number_format($medicines->total()) }} medicines</h2><span class="text-sm text-gray-400 cursor-not-allowed" title="Coming soon">Stock alerts</span></div>
+            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-xl font-semibold">{{ number_format($medicines->total()) }} medicines</h2><a href="{{ route('web.pharmacy.alerts') }}" class="text-sm text-indigo-600 hover:text-indigo-700">Stock alerts</a></div>
             <div class="overflow-x-auto">
                 @if ($medicines->isEmpty())
                     <div class="text-center py-8 text-gray-500">No medicines match the selected filters.</div>

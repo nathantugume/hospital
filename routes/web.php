@@ -59,6 +59,9 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/pharmacy', [PharmacyController::class, 'index'])
         ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
         ->name('web.pharmacy.index');
+    Route::get('/pharmacy/alerts', [PharmacyController::class, 'alerts'])
+        ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
+        ->name('web.pharmacy.alerts');
     Route::get('/invoices', [InvoiceController::class, 'index'])
         ->middleware('role:super_admin,admin,accountant,insurance_officer')
         ->name('web.invoices.index');

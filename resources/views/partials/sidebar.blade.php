@@ -88,7 +88,7 @@
             <div class="nav-label">Pharmacy</div>
             <a class="nav-link {{ request()->routeIs('web.pharmacy.*') ? 'active' : '' }}" href="{{ route('web.pharmacy.index') }}"><span class="nav-icon" aria-hidden="true">▣</span><span>Inventory</span></a>
             <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">℞</span><span>Prescriptions</span><span class="soon-badge">Soon</span></span>
-            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">!</span><span>Stock alerts</span><span class="soon-badge">Soon</span></span>
+            <a class="nav-link {{ request()->routeIs('web.pharmacy.alerts') ? 'active' : '' }}" href="{{ route('web.pharmacy.alerts') }}"><span class="nav-icon" aria-hidden="true">!</span><span>Stock alerts</span></a>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
         @elseif ($navUser->isAccountant() || $navUser->isInsuranceOfficer())
             <div class="nav-label">Workspace</div>
@@ -97,7 +97,7 @@
             <div class="nav-label">Finance</div>
             <a class="nav-link {{ request()->routeIs('web.invoices.*') ? 'active' : '' }}" href="{{ route('web.invoices.index') }}"><span class="nav-icon" aria-hidden="true">▤</span><span>Invoices</span></a>
             <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">❖</span><span>Insurance claims</span><span class="soon-badge">Soon</span></span>
-            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">▥</span><span>Reports</span><span class="soon-badge">Soon</span></span>
+            <a class="nav-link {{ request()->routeIs('web.reports.*') ? 'active' : '' }}" href="{{ route('web.reports.financial') }}"><span class="nav-icon" aria-hidden="true">▥</span><span>Reports</span></a>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
         @elseif ($navUser->isPatient())
             <div class="nav-label">My care</div>

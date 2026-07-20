@@ -173,6 +173,44 @@ class BladeWebTest extends TestCase
             ->assertRedirect(route('access.denied'));
     }
 
+    public function test_pharmacist_can_view_real_stock_alerts(): void
+    {
+        $pharmacist = User::factory()->create(['role' => 'pharmacist']);
+
+        Medicine::create([
+            'code' => 'MED-LOW-1',
+            'name' => 'Test Low Stock Medicine',
+            'stock' => 2,
+            'reorder_level' => 10,
+        ]);
+        Medicine::create([
+            'code' => 'MED-OUT-1',
+            'name' => 'Test Out Of Stock Medicine',
+            'stock' => 0,
+            'reorder_level' => 10,
+        ]);
+        Medicine::create([
+            'code' => 'MED-OK-1',
+            'name' => 'Test Healthy Stock Medicine',
+            'stock' => 500,
+            'reorder_level' => 10,
+        ]);
+
+        $response = $this->actingAs($pharmacist)
+            ->get(route('web.pharmacy.alerts'))
+            ->assertOk()
+            ->assertSee('Stock alerts')
+            ->assertSee('Test Low Stock Medicine')
+            ->assertSee('Test Out Of Stock Medicine')
+            ->assertDontSee('Test Healthy Stock Medicine');
+
+        $this->actingAs($pharmacist)
+            ->get(route('web.pharmacy.alerts', ['type' => 'out']))
+            ->assertOk()
+            ->assertSee('Test Out Of Stock Medicine')
+            ->assertDontSee('Test Low Stock Medicine');
+    }
+
     public function test_admin_can_change_currency_from_settings_and_dashboard_uses_it(): void
     {
         $user = User::factory()->admin()->create();
