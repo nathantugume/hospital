@@ -40,7 +40,8 @@ class BladeWebTest extends TestCase
             ->assertOk()
             ->assertSee('dateRangeBtn')
             ->assertSee('tab-overview')
-            ->assertSee('Total Revenue');
+            ->assertSee('Total Revenue')
+            ->assertDontSee('data-sidebar');
 
         $this->get('/admin/dashboard')
             ->assertOk()
