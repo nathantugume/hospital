@@ -78,7 +78,7 @@
 
             <div class="nav-label">Laboratory</div>
             <a class="nav-link {{ request()->routeIs('web.laboratory.*') ? 'active' : '' }}" href="{{ route('web.laboratory.index') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Requests and results</span></a>
-            <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">▧</span><span>Test requests</span><span class="soon-badge">Soon</span></span>
+            <a class="nav-link {{ request()->routeIs('web.laboratory.requests') ? 'active' : '' }}" href="{{ route('web.laboratory.requests') }}"><span class="nav-icon" aria-hidden="true">▧</span><span>Test requests</span></a>
             <span class="nav-link nav-link-soon"><span class="nav-icon" aria-hidden="true">⚙</span><span>Lab equipment</span><span class="soon-badge">Soon</span></span>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
         @elseif ($navUser->isPharmacist())

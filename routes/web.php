@@ -56,6 +56,8 @@ Route::middleware('auth')->group(function (): void {
         ->name('web.staff.index');
     Route::get('/laboratory', [LabController::class, 'index'])
         ->name('web.laboratory.index');
+    Route::get('/laboratory/requests', [LabController::class, 'requests'])
+        ->name('web.laboratory.requests');
     Route::get('/pharmacy', [PharmacyController::class, 'index'])
         ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
         ->name('web.pharmacy.index');

@@ -41,4 +41,45 @@ class LabController extends Controller
 
         return view('laboratory.index', compact('requests', 'results', 'stats'));
     }
+
+    public function requests(Request $request): View
+    {
+        $patientId = $request->user()->isPatient() ? $request->user()->patient?->getKey() : null;
+
+        $query = TestRequest::query()->with(['patient', 'doctor']);
+
+        if ($patientId) {
+            $query->where('patient_id', $patientId);
+        }
+
+        $status = $request->string('status')->trim()->value();
+
+        $query
+            ->when($request->string('search')->trim()->value(), function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->where('code', 'like', "%{$search}%")
+                        ->orWhereHas('patient', fn ($query) => $query
+                            ->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%"));
+                });
+            })
+            ->when($status, fn ($query, string $status) => $query->where('status', $status))
+            ->orderByDesc('requested_date');
+
+        $testRequests = $query->paginate(15)->withQueryString();
+
+        $statsQuery = TestRequest::query();
+        if ($patientId) {
+            $statsQuery->where('patient_id', $patientId);
+        }
+
+        $stats = [
+            'pending' => (clone $statsQuery)->where('status', 'Pending')->count(),
+            'in_progress' => (clone $statsQuery)->where('status', 'In Progress')->count(),
+            'completed' => (clone $statsQuery)->where('status', 'Completed')->count(),
+            'cancelled' => (clone $statsQuery)->where('status', 'Cancelled')->count(),
+        ];
+
+        return view('laboratory.requests', compact('testRequests', 'stats', 'status'));
+    }
 }

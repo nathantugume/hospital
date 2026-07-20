@@ -7,6 +7,7 @@ use App\Models\Medicine;
 use App\Models\Patient;
 use App\Models\Prescription;
 use App\Models\Staff;
+use App\Models\TestRequest;
 use App\Models\User;
 use Tests\TestCase;
 
@@ -209,6 +210,40 @@ class BladeWebTest extends TestCase
             ->assertOk()
             ->assertSee('Test Out Of Stock Medicine')
             ->assertDontSee('Test Low Stock Medicine');
+    }
+
+    public function test_lab_technician_can_view_and_filter_real_test_requests(): void
+    {
+        $labTech = User::factory()->create(['role' => 'lab_technician']);
+        $patient = Patient::factory()->create();
+
+        TestRequest::create([
+            'code' => 'TR-TEST-PENDING',
+            'patient_id' => $patient->id,
+            'priority' => 'Routine',
+            'status' => 'Pending',
+            'requested_date' => now()->toDateString(),
+        ]);
+        TestRequest::create([
+            'code' => 'TR-TEST-COMPLETED',
+            'patient_id' => $patient->id,
+            'priority' => 'Urgent',
+            'status' => 'Completed',
+            'requested_date' => now()->toDateString(),
+        ]);
+
+        $this->actingAs($labTech)
+            ->get(route('web.laboratory.requests'))
+            ->assertOk()
+            ->assertSee('Test requests')
+            ->assertSee('TR-TEST-PENDING')
+            ->assertSee('TR-TEST-COMPLETED');
+
+        $this->actingAs($labTech)
+            ->get(route('web.laboratory.requests', ['status' => 'Pending']))
+            ->assertOk()
+            ->assertSee('TR-TEST-PENDING')
+            ->assertDontSee('TR-TEST-COMPLETED');
     }
 
     public function test_admin_can_change_currency_from_settings_and_dashboard_uses_it(): void

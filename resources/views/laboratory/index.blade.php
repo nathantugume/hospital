@@ -38,7 +38,7 @@
 
     <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-lg border bg-background shadow-sm">
-            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Recent test requests</h2><span class="text-sm text-gray-400 cursor-not-allowed" title="Coming soon">Open queue</span></div>
+            <div class="p-4 border-b flex items-center justify-between"><h2 class="text-lg font-semibold">Recent test requests</h2><a href="{{ route('web.laboratory.requests') }}" class="text-sm text-indigo-600 hover:text-indigo-700">Open queue</a></div>
             <div class="overflow-x-auto">
                 @if ($requests->isEmpty())
                     <div class="text-center py-8 text-gray-500">No test requests are available.</div>
