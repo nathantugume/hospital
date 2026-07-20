@@ -39,7 +39,9 @@ jobs:
 
       - name: Install PHP dependencies
         # The source lockfile currently contains Laravel 11 releases flagged by Composer advisories.
-        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-blocking
+        # --no-security-blocking works across Composer 2.4+ (the deploy target runs an older 2.x
+        # than the one this runner installs, and the newer --no-blocking alias isn't available there).
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-security-blocking
 
       - name: Prepare test environment
         run: |
@@ -193,7 +195,7 @@ jobs:
           printf 'VIEW_COMPILED_PATH=%s\n' "$RELEASE/bootstrap/cache/views" >> "$RELEASE/.env"
 
           cd "$RELEASE"
-          /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-blocking --ignore-platform-req=ext-pcntl
+          /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-security-blocking --ignore-platform-req=ext-pcntl
           /usr/bin/php artisan optimize:clear
           /usr/bin/php artisan migrate --force
           /usr/bin/php artisan config:cache
