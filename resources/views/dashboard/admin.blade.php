@@ -5,136 +5,130 @@
 
 @section('content')
 @php
-    $currency = app(\App\Services\CurrencyService::class);
     $firstName = str($user->name)->before(' ');
     $maxAppointmentStatus = max(1, (int) $appointmentStatus->max());
     $cards = [
-        ['label' => 'Active patients', 'value' => number_format($stats['active_patients']), 'detail' => 'Current patient records', 'icon' => '◉'],
-        ['label' => "Today's appointments", 'value' => number_format($stats['today_appointments']), 'detail' => 'Scheduled for today', 'icon' => '◷'],
-        ['label' => 'Care team', 'value' => number_format($stats['staff']), 'detail' => 'Active staff profiles', 'icon' => '✚'],
-        ['label' => 'Outstanding balance', 'value' => $currency->format($stats['outstanding']), 'detail' => 'Pending, partial or overdue', 'icon' => '¤'],
-        ['label' => 'Collected this month', 'value' => $currency->format($stats['monthly_revenue']), 'detail' => 'Paid invoices', 'icon' => '▤'],
+        ['label' => 'Active patients', 'value' => number_format($stats['active_patients']), 'detail' => 'Current patient records'],
+        ['label' => "Today's appointments", 'value' => number_format($stats['today_appointments']), 'detail' => 'Scheduled for today'],
+        ['label' => 'Care team', 'value' => number_format($stats['staff']), 'detail' => 'Active staff profiles'],
+        ['label' => 'Outstanding balance', 'value' => $currency->format($stats['outstanding']), 'detail' => 'Pending, partial or overdue'],
+        ['label' => 'Collected this month', 'value' => $currency->format($stats['monthly_revenue']), 'detail' => 'Paid invoices'],
     ];
 @endphp
 
-<div class="dashboard-hero">
-    <div>
-        <span class="eyebrow">Admin workspace</span>
-        <h1>Welcome back, {{ $firstName }}</h1>
-        <p>System overview in {{ $currency->code() }} · Keep today’s patient flow, care delivery, and billing on track.</p>
+<div class="flex flex-col gap-6">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl lg:text-3xl font-bold tracking-tight">Welcome back, {{ $firstName }}</h1>
+            <p class="text-gray-500">System overview in {{ $currency->code() }} &middot; {{ now()->format('l, d F Y') }}</p>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ route('web.patients.index') }}" class="inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm shadow-sm">+ Register patient</a>
+            <a href="{{ route('web.appointments.index') }}" class="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2 text-sm shadow-sm">Open schedule</a>
+        </div>
     </div>
-    <div class="dashboard-hero-meta">
-        <span class="live-indicator"><span class="live-dot" aria-hidden="true"></span>Live demo</span>
-        <span>{{ now()->format('D, d M Y') }}</span>
-    </div>
-</div>
 
-<nav class="quick-actions" aria-label="Quick actions">
-    <a class="quick-action" href="{{ route('web.patients.index') }}">
-        <span class="quick-action-icon" aria-hidden="true">＋</span>
-        <span><strong>Register patient</strong><small>Start a new record</small></span>
-        <span class="quick-action-arrow" aria-hidden="true">→</span>
-    </a>
-    <a class="quick-action" href="{{ route('web.appointments.index') }}">
-        <span class="quick-action-icon" aria-hidden="true">◷</span>
-        <span><strong>Open appointments</strong><small>Review today’s schedule</small></span>
-        <span class="quick-action-arrow" aria-hidden="true">→</span>
-    </a>
-    <a class="quick-action" href="{{ route('web.invoices.index') }}">
-        <span class="quick-action-icon" aria-hidden="true">▤</span>
-        <span><strong>Review billing</strong><small>Track invoices and balances</small></span>
-        <span class="quick-action-arrow" aria-hidden="true">→</span>
-    </a>
-    <a class="quick-action" href="{{ route('admin.settings.edit') }}">
-        <span class="quick-action-icon" aria-hidden="true">⚙</span>
-        <span><strong>System settings</strong><small>Currency and preferences</small></span>
-        <span class="quick-action-arrow" aria-hidden="true">→</span>
-    </a>
-</nav>
-
-<div class="stat-grid">
-    @foreach ($cards as $card)
-        <article class="stat-card">
-            <div class="stat-card-top">
-                <span class="label">{{ $card['label'] }}</span>
-                <span class="metric-icon" aria-hidden="true">{{ $card['icon'] }}</span>
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        @foreach ($cards as $card)
+            <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+                <h3 class="text-sm font-medium text-gray-500">{{ $card['label'] }}</h3>
+                <div class="text-2xl xl:text-3xl font-bold mt-2">{{ $card['value'] }}</div>
+                <p class="text-xs text-gray-500 mt-1">{{ $card['detail'] }}</p>
             </div>
-            <strong class="value">{{ $card['value'] }}</strong>
-            <span class="detail">{{ $card['detail'] }}</span>
-        </article>
-    @endforeach
-</div>
+        @endforeach
+    </div>
 
-<div class="dashboard-grid dashboard-grid-primary">
-    <section class="panel">
-        <div class="panel-header">
-            <div><span class="panel-kicker">Today</span><h2>Workload by status</h2></div>
-            <a class="text-link" href="{{ route('web.appointments.index') }}">Open schedule <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="panel-body workload-list">
-            @if ($appointmentStatus->isEmpty())
-                <div class="empty">No appointments scheduled today.</div>
-            @else
-                @foreach ($appointmentStatus as $status => $count)
-                    <div class="workload-row">
-                        <div class="workload-label"><span>{{ $status }}</span><strong>{{ number_format($count) }}</strong></div>
-                        <div class="workload-track"><span style="width: {{ round(($count / $maxAppointmentStatus) * 100) }}%"></span></div>
-                    </div>
-                @endforeach
-            @endif
-        </div>
-    </section>
-
-    <section class="panel">
-        <div class="panel-header">
-            <div><span class="panel-kicker">Next up</span><h2>Upcoming appointments</h2></div>
-            <a class="text-link" href="{{ route('web.appointments.index') }}" aria-label="View all appointments">View all <span aria-hidden="true">→</span></a>
-        </div>
-        <div class="panel-body table-wrap">
-            @if ($upcomingAppointments->isEmpty())
-                <div class="empty">No upcoming appointments have been recorded.</div>
-            @else
-                <table>
-                    <thead><tr><th>When</th><th>Patient</th><th>Status</th></tr></thead>
-                    <tbody>
-                    @foreach ($upcomingAppointments as $appointment)
-                        <tr>
-                            <td><strong>{{ optional($appointment->date)->format('d M') }}</strong><br><span class="muted">{{ $appointment->start_time }}</span></td>
-                            <td>{{ $appointment->patient?->full_name ?? 'Patient record' }}<br><span class="muted">{{ $appointment->doctor?->full_name ?? 'Unassigned clinician' }}</span></td>
-                            <td><span class="status status-{{ strtolower($appointment->status ?? 'pending') }}">{{ $appointment->status ?? 'Pending' }}</span></td>
-                        </tr>
+    <div class="grid gap-6 lg:grid-cols-2">
+        <div class="rounded-lg border bg-background shadow-sm">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h2 class="text-lg font-semibold">Today's workload by status</h2>
+                <a href="{{ route('web.appointments.index') }}" class="text-sm text-indigo-600 hover:text-indigo-700">Open schedule</a>
+            </div>
+            <div class="p-4 space-y-4">
+                @if ($appointmentStatus->isEmpty())
+                    <div class="text-center py-8 text-gray-500">No appointments scheduled today.</div>
+                @else
+                    @foreach ($appointmentStatus as $status => $count)
+                        <div class="space-y-1">
+                            <div class="flex justify-between text-sm"><span class="font-medium text-gray-700">{{ $status }}</span><span class="text-gray-500">{{ number_format($count) }}</span></div>
+                            <div class="h-2 rounded-full bg-gray-100"><div class="h-2 rounded-full bg-primary" style="width: {{ round(($count / $maxAppointmentStatus) * 100) }}%"></div></div>
+                        </div>
                     @endforeach
+                @endif
+            </div>
+        </div>
+
+        <div class="rounded-lg border bg-background shadow-sm">
+            <div class="p-4 border-b flex items-center justify-between">
+                <h2 class="text-lg font-semibold">Upcoming appointments</h2>
+                <a href="{{ route('web.appointments.index') }}" class="text-sm text-indigo-600 hover:text-indigo-700">View all</a>
+            </div>
+            <div class="overflow-x-auto">
+                @if ($upcomingAppointments->isEmpty())
+                    <div class="text-center py-8 text-gray-500">No upcoming appointments have been recorded.</div>
+                @else
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 border-b">
+                            <tr><th class="h-10 px-4 text-left">When</th><th class="h-10 px-4 text-left">Patient</th><th class="h-10 px-4 text-left">Status</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($upcomingAppointments as $appointment)
+                                @php
+                                    $statusClasses = match ($appointment->status ?? 'Pending') {
+                                        'Confirmed' => 'bg-blue-100 text-blue-700',
+                                        'Completed' => 'bg-green-100 text-green-700',
+                                        'Cancelled', 'No-Show' => 'bg-red-100 text-red-700',
+                                        default => 'bg-amber-100 text-amber-700',
+                                    };
+                                @endphp
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="p-3">{{ optional($appointment->date)->format('d M') }}<div class="text-xs text-gray-500">{{ $appointment->start_time }}</div></td>
+                                    <td class="p-3">{{ $appointment->patient?->full_name ?? 'Patient record' }}<div class="text-xs text-gray-500">{{ $appointment->doctor?->full_name ?? 'Unassigned clinician' }}</div></td>
+                                    <td class="p-3"><span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $appointment->status ?? 'Pending' }}</span></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    <div class="rounded-lg border bg-background shadow-sm">
+        <div class="p-4 border-b flex items-center justify-between">
+            <h2 class="text-lg font-semibold">Recent invoices</h2>
+            <a href="{{ route('web.invoices.index') }}" class="text-sm text-indigo-600 hover:text-indigo-700">View billing</a>
+        </div>
+        <div class="overflow-x-auto">
+            @if ($recentInvoices->isEmpty())
+                <div class="text-center py-8 text-gray-500">No invoices have been recorded.</div>
+            @else
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 border-b">
+                        <tr><th class="h-10 px-4 text-left">Invoice</th><th class="h-10 px-4 text-left">Patient</th><th class="h-10 px-4 text-right">Amount</th><th class="h-10 px-4 text-right">Balance</th><th class="h-10 px-4 text-left">Status</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($recentInvoices as $invoice)
+                            @php
+                                $statusClasses = match ($invoice->status ?? 'Pending') {
+                                    'Paid' => 'bg-green-100 text-green-700',
+                                    'Partial' => 'bg-amber-100 text-amber-700',
+                                    'Overdue', 'Cancelled' => 'bg-red-100 text-red-700',
+                                    default => 'bg-gray-100 text-gray-700',
+                                };
+                            @endphp
+                            <tr class="border-b hover:bg-gray-50">
+                                <td class="p-3 font-medium">{{ $invoice->code }}<div class="text-xs text-gray-500 font-normal">{{ optional($invoice->date)->format('d M Y') }}</div></td>
+                                <td class="p-3">{{ $invoice->patient?->full_name ?? 'Patient record' }}</td>
+                                <td class="p-3 text-right">@money($invoice->amount)</td>
+                                <td class="p-3 text-right">@money($invoice->balance)</td>
+                                <td class="p-3"><span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $invoice->status ?? 'Pending' }}</span></td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             @endif
         </div>
-    </section>
+    </div>
 </div>
-
-<section class="panel dashboard-section">
-    <div class="panel-header">
-        <div><span class="panel-kicker">Finance</span><h2>Recent invoices</h2></div>
-        <a class="text-link" href="{{ route('web.invoices.index') }}">View billing <span aria-hidden="true">→</span></a>
-    </div>
-    <div class="panel-body table-wrap">
-        @if ($recentInvoices->isEmpty())
-            <div class="empty">No invoices have been recorded.</div>
-        @else
-            <table>
-                <thead><tr><th>Invoice</th><th>Patient</th><th>Amount</th><th>Balance</th><th>Status</th></tr></thead>
-                <tbody>
-                @foreach ($recentInvoices as $invoice)
-                    <tr>
-                        <td><strong>{{ $invoice->code }}</strong><br><span class="muted">{{ optional($invoice->date)->format('d M Y') }}</span></td>
-                        <td>{{ $invoice->patient?->full_name ?? 'Patient record' }}</td>
-                        <td>@money($invoice->amount)</td>
-                        <td>@money($invoice->balance)</td>
-                        <td><span class="status status-{{ strtolower($invoice->status ?? 'pending') }}">{{ $invoice->status ?? 'Pending' }}</span></td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
-        @endif
-    </div>
-</section>
 @endsection

@@ -38,16 +38,15 @@ class BladeWebTest extends TestCase
         $this->assertAuthenticatedAs($user);
         $this->get('/')
             ->assertOk()
-            ->assertSee('dateRangeBtn')
-            ->assertSee('tab-overview')
-            ->assertSee('Total Revenue')
-            ->assertDontSee('data-sidebar');
+            ->assertSee('Welcome back')
+            ->assertSee('Active patients')
+            ->assertSee('data-sidebar', false);
 
         $this->get('/admin/dashboard')
             ->assertOk()
-            ->assertSee('dateRangeBtn')
-            ->assertSee('tab-analytics')
-            ->assertSee('Notifications');
+            ->assertSee('Welcome back')
+            ->assertSee('Upcoming appointments')
+            ->assertSee('Recent invoices');
     }
 
     public function test_staff_can_view_blade_patient_and_invoice_lists(): void
@@ -96,7 +95,7 @@ class BladeWebTest extends TestCase
         $this->actingAs($user)
             ->get(route('admin.settings.edit'))
             ->assertOk()
-            ->assertSee('Default currency')
+            ->assertSee('Base Currency')
             ->assertSee('UGX - Ugandan Shilling');
 
         $this->actingAs($user)
@@ -112,11 +111,15 @@ class BladeWebTest extends TestCase
             ->assertSee('Preview:')
             ->assertSee('$ 125,000.00');
 
+        $expectedOutstanding = app(\App\Services\CurrencyService::class)->format(
+            Invoice::whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance')
+        );
+
         $this->actingAs($user)
             ->get(route('admin.dashboard'))
             ->assertOk()
-            ->assertSee('$ 45,231.89')
-            ->assertSee('dateRangeBtn');
+            ->assertSee($expectedOutstanding)
+            ->assertSee('Outstanding balance');
     }
 
     public function test_patient_cannot_change_system_currency(): void

@@ -22,7 +22,7 @@ class InvoiceFactory extends Factory
             'paid_amount' => 0,
             'balance' => $amount,
             'currency' => 'UGX',
-            'status' => 'Unpaid',
+            'status' => 'Pending',
             'insurance_status' => 'Not Submitted',
         ];
     }

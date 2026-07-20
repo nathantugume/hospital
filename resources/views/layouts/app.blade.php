@@ -7,6 +7,7 @@
     <title>@yield('title', 'MediTrack HMS') | MediTrack HMS</title>
     @yield('head')
     <link rel="icon" type="image/png" href="{{ asset('favicon.png') }}">
+    <link rel="stylesheet" href="{{ asset('style.css') }}">
     <link rel="stylesheet" href="{{ asset('blade.css') }}">
     @stack('styles')
 </head>

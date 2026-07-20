@@ -26,6 +26,13 @@ class InvoiceController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('invoices.index', compact('invoices'));
+        $stats = [
+            'outstanding' => Invoice::whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
+            'paid_this_month' => Invoice::where('status', 'Paid')->whereMonth('payment_date', now()->month)->whereYear('payment_date', now()->year)->sum('amount'),
+            'overdue' => Invoice::where('status', 'Overdue')->count(),
+            'partial' => Invoice::where('status', 'Partial')->count(),
+        ];
+
+        return view('invoices.index', compact('invoices', 'stats'));
     }
 }

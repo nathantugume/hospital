@@ -18,6 +18,7 @@ use App\Models\LabTest;
 use App\Models\LabResult;
 use App\Models\LabResultItem;
 use App\Models\LabEquipment;
+use App\Models\TestRequest;
 use App\Models\Medicine;
 use App\Models\MedicineBatch;
 use App\Models\Prescription;
@@ -264,10 +265,8 @@ class EaHospitalSeeder extends Seeder
             $staffId = null;
             $patientId = null;
             if ($u[1] !== 'patient' && $u[1] !== 'super_admin') {
-                $staffId = Staff::where('email', 'like', '%' . $u[2] . '%')->first()?->id;
-                if (! $staffId) {
-                    $staffId = Staff::inRandomOrder()->first()?->id;
-                }
+                $expectedStaffEmail = strtolower(str_replace(['.', ' '], ['', '.'], $u[3])) . '@meditrack.ea';
+                $staffId = Staff::where('email', $expectedStaffEmail)->value('id');
             }
             if ($u[1] === 'patient') {
                 $patient = Patient::firstOrCreate(['email' => $u[0]], [
@@ -334,7 +333,7 @@ class EaHospitalSeeder extends Seeder
         }
 
         // === Appointments ===
-        $doctors = Staff::where('role', 'like', '%Doctor%')->orWhere('role', 'like', '%Physician%')->get();
+        $doctors = Staff::whereNotNull('specialization')->get();
         $patients = Patient::all();
         $apptTypes = ['Check-up', 'Follow-up', 'Consultation', 'Emergency', 'New Patient', 'Procedure'];
         $apptStatuses = ['Confirmed', 'Completed', 'Pending', 'Cancelled', 'No-Show'];
@@ -356,19 +355,31 @@ class EaHospitalSeeder extends Seeder
         }
 
         // === Invoices ===
+        $invoiceStatuses = ['Paid', 'Paid', 'Pending', 'Partial', 'Overdue', 'Cancelled'];
+
         for ($i = 0; $i < 30; $i++) {
             $amount = rand(50000, 2000000);
+            $invoiceDate = now()->subDays(rand(1, 60));
+            $status = $invoiceStatuses[$i % count($invoiceStatuses)];
+
+            $paidAmount = match ($status) {
+                'Paid' => $amount,
+                'Partial' => (int) round($amount * 0.5),
+                default => 0,
+            };
+
             $invoice = Invoice::create([
                 'code' => 'INV-' . str_pad((string) (1001 + $i), 5, '0', STR_PAD_LEFT),
                 'company_id' => $company->id,
                 'patient_id' => $patients->random()->id,
-                'date' => now()->subDays(rand(1, 60))->toDateString(),
-                'due_date' => now()->addDays(30)->toDateString(),
+                'date' => $invoiceDate->toDateString(),
+                'due_date' => $status === 'Overdue' ? $invoiceDate->copy()->addDays(14)->toDateString() : now()->addDays(30)->toDateString(),
                 'amount' => $amount,
-                'paid_amount' => $i % 3 === 0 ? $amount : 0,
-                'balance' => $i % 3 === 0 ? 0 : $amount,
+                'paid_amount' => $paidAmount,
+                'balance' => $amount - $paidAmount,
                 'currency' => 'UGX',
-                'status' => $i % 3 === 0 ? 'Paid' : 'Unpaid',
+                'status' => $status,
+                'payment_date' => $status === 'Paid' ? $invoiceDate->copy()->addDays(rand(0, 5))->toDateString() : null,
                 'insurance_status' => $i % 4 === 0 ? 'Approved' : 'Not Submitted',
             ]);
             InvoiceItem::create([
@@ -418,6 +429,80 @@ class EaHospitalSeeder extends Seeder
                 'quantity' => rand(100, 500),
                 'status' => 'Active',
             ]);
+        }
+
+        // === Prescriptions ===
+        $allMedicines = Medicine::all();
+        $dosages = ['500mg', '250mg', '10mg', '5mg', '20mg'];
+        $frequencies = ['Once daily', 'Twice daily', 'Three times daily', 'Every 8 hours'];
+        $prescriptionStatuses = ['Active', 'Completed', 'Cancelled'];
+
+        for ($i = 0; $i < 25; $i++) {
+            $prescription = Prescription::create([
+                'code' => 'RX-' . str_pad((string) (1001 + $i), 5, '0', STR_PAD_LEFT),
+                'patient_id' => $patients->random()->id,
+                'doctor_id' => $doctors->random()->id,
+                'date' => now()->subDays(rand(0, 30))->toDateString(),
+                'status' => $prescriptionStatuses[array_rand($prescriptionStatuses)],
+                'refills' => rand(0, 3),
+                'notes' => 'Take as directed.',
+            ]);
+
+            $medicine = $allMedicines->random();
+            PrescriptionItem::create([
+                'prescription_id' => $prescription->id,
+                'medication' => $medicine->name,
+                'medicine_id' => $medicine->id,
+                'dosage' => $dosages[array_rand($dosages)],
+                'frequency' => $frequencies[array_rand($frequencies)],
+                'route' => 'Oral',
+                'duration' => rand(3, 14),
+                'duration_unit' => 'Days',
+                'instructions' => 'Take with food.',
+            ]);
+        }
+
+        // === Lab: Test Requests & Results ===
+        $labTests = LabTest::all();
+        $priorities = ['Routine', 'Urgent'];
+        $requestStatuses = ['Pending', 'In Progress', 'Completed', 'Cancelled'];
+        $resultStatuses = ['Pending', 'Completed', 'Verified'];
+        $flags = ['Normal', 'Normal', 'Normal', 'High', 'Low', 'Critical'];
+
+        for ($i = 0; $i < 20; $i++) {
+            $labTest = $labTests->random();
+            $status = $requestStatuses[array_rand($requestStatuses)];
+
+            $testRequest = TestRequest::create([
+                'code' => 'TR-' . str_pad((string) (1001 + $i), 5, '0', STR_PAD_LEFT),
+                'patient_id' => $patients->random()->id,
+                'doctor_id' => $doctors->random()->id,
+                'priority' => $priorities[array_rand($priorities)],
+                'status' => $status,
+                'requested_date' => now()->subDays(rand(0, 14))->toDateString(),
+                'notes' => 'Routine lab work-up.',
+            ]);
+
+            if (in_array($status, ['Completed', 'In Progress'], true)) {
+                LabResult::create([
+                    'code' => 'LR-' . str_pad((string) (1001 + $i), 5, '0', STR_PAD_LEFT),
+                    'sample_id' => 'SMP-' . str_pad((string) (1001 + $i), 5, '0', STR_PAD_LEFT),
+                    'patient_id' => $testRequest->patient_id,
+                    'test_request_id' => $testRequest->id,
+                    'lab_test_id' => $labTest->id,
+                    'test_name' => $labTest->name,
+                    'result_value' => (string) rand(4, 20),
+                    'normal_range' => '4-10',
+                    'unit' => 'units',
+                    'result_date' => now()->subDays(rand(0, 10))->toDateString(),
+                    'collection_date' => now()->subDays(rand(1, 12))->toDateString(),
+                    'status' => $resultStatuses[array_rand($resultStatuses)],
+                    'flag' => $flags[array_rand($flags)],
+                    'ordered_by' => $testRequest->doctor_id,
+                    'sample_type' => $labTest->sample_type,
+                    'department' => $labTest->department,
+                ]);
+            }
         }
 
         // === Suppliers (EA) ===
@@ -533,6 +618,7 @@ class EaHospitalSeeder extends Seeder
         echo "    - 1 company (Mulago National Referral Hospital)\n";
         echo "    - 10 departments, 22 staff, 8 users\n";
         echo "    - 60 patients, 50 appointments, 30 invoices\n";
+        echo "    - 25 prescriptions, 20 test requests and lab results\n";
         echo "    - 10 medicines, 8 suppliers, 5 ambulances\n";
         echo "    - 15 blood donors, 20 rooms, 10 services\n";
     }

@@ -4,43 +4,105 @@
 @section('header', 'Care team')
 
 @section('content')
-<div class="page-heading">
-    <div><h1>Care team</h1><p>Find clinicians and staff by department, role, and availability.</p></div>
-    @if (auth()->user()->isAdmin())<a class="button button-primary" href="{{ url('/add-staff.html') }}">Add staff member</a>@endif
-</div>
-
-<div class="stat-grid">
-    <div class="stat-card"><div class="stat-card-top"><span class="label">Active staff</span><span class="metric-icon">●</span></div><strong class="value">{{ number_format($stats['active']) }}</strong><span class="detail">Available in the system</span></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="label">Doctors</span><span class="metric-icon">✚</span></div><strong class="value">{{ number_format($stats['doctors']) }}</strong><span class="detail">Active physicians</span></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="label">Departments</span><span class="metric-icon">◇</span></div><strong class="value">{{ number_format($stats['departments']) }}</strong><span class="detail">Operational departments</span></div>
-    <div class="stat-card"><div class="stat-card-top"><span class="label">On leave</span><span class="metric-icon">!</span></div><strong class="value">{{ number_format($stats['on_leave']) }}</strong><span class="detail">Currently unavailable</span></div>
-</div>
-
-<form class="filters" method="GET" action="{{ route('web.staff.index') }}">
-    <div class="field"><label for="search">Search care team</label><input id="search" name="search" value="{{ request('search') }}" placeholder="Name, code, specialization"></div>
-    <div class="field"><label for="department_id">Department</label><select id="department_id" name="department_id"><option value="">All departments</option>@foreach ($departments as $department)<option value="{{ $department->id }}" @selected((string) request('department_id') === (string) $department->id)>{{ $department->name }}</option>@endforeach</select></div>
-    <div class="field"><label for="status">Status</label><select id="status" name="status"><option value="">All statuses</option>@foreach (['Active', 'Inactive', 'On Leave'] as $status)<option value="{{ $status }}" @selected(request('status') === $status)>{{ $status }}</option>@endforeach</select></div>
-    <button class="button button-primary" type="submit">Filter</button>
-</form>
-
-<section class="panel">
-    <div class="panel-header"><div><span class="panel-kicker">People directory</span><h2>{{ number_format($staff->total()) }} staff members</h2></div><a class="text-link" href="{{ url('/staff-schedule.html') }}">Staff schedule</a></div>
-    <div class="panel-body table-wrap">
-        @if ($staff->isEmpty())
-            <div class="empty">No staff members match the selected filters.</div>
-        @else
-            <table><thead><tr><th>Staff member</th><th>Role</th><th>Department</th><th>Specialization</th><th>Contact</th><th>Status</th></tr></thead><tbody>
-            @foreach ($staff as $member)<tr>
-                <td><strong>{{ $member->full_name }}</strong><br><span class="muted">{{ $member->code }}</span></td>
-                <td>{{ $member->position ?: $member->role ?: 'Care team' }}</td>
-                <td>{{ $member->department?->name ?? '—' }}</td>
-                <td>{{ $member->specialization ?: 'General care' }}</td>
-                <td>{{ $member->email ?: '—' }}</td>
-                <td><span class="status status-{{ strtolower(str_replace(' ', '-', $member->status ?? 'active')) }}">{{ $member->status ?? 'Active' }}</span></td>
-            </tr>@endforeach
-            </tbody></table>
-            <div class="pagination"><span>Showing {{ $staff->firstItem() }}–{{ $staff->lastItem() }} of {{ $staff->total() }}</span><span>{{ $staff->links() }}</span></div>
+<div class="flex flex-col gap-5">
+    <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl lg:text-3xl font-bold tracking-tight mb-2">Care team</h1>
+            <p class="text-gray-500">Find clinicians and staff by department, role, and availability.</p>
+        </div>
+        @if (auth()->user()->isAdmin())
+            <a href="{{ url('/add-staff.html') }}" class="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2 text-sm shadow-sm">+ Add staff member</a>
         @endif
     </div>
-</section>
+
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+            <div class="flex justify-between items-center"><h3 class="text-sm font-medium text-gray-500">Active staff</h3><span class="text-green-500">&bull;</span></div>
+            <div class="text-2xl xl:text-3xl font-bold mt-2">{{ number_format($stats['active']) }}</div>
+            <p class="text-xs text-gray-500 mt-1">Available in the system</p>
+        </div>
+        <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+            <div class="flex justify-between items-center"><h3 class="text-sm font-medium text-gray-500">Doctors</h3><span class="text-gray-400">&#10010;</span></div>
+            <div class="text-2xl xl:text-3xl font-bold mt-2">{{ number_format($stats['doctors']) }}</div>
+            <p class="text-xs text-gray-500 mt-1">Active physicians</p>
+        </div>
+        <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+            <div class="flex justify-between items-center"><h3 class="text-sm font-medium text-gray-500">Departments</h3><span class="text-gray-400">&#9671;</span></div>
+            <div class="text-2xl xl:text-3xl font-bold mt-2">{{ number_format($stats['departments']) }}</div>
+            <p class="text-xs text-gray-500 mt-1">Operational departments</p>
+        </div>
+        <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+            <div class="flex justify-between items-center"><h3 class="text-sm font-medium text-gray-500">On leave</h3><span class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-700 px-2 py-0.5 text-xs font-semibold">!</span></div>
+            <div class="text-2xl xl:text-3xl font-bold mt-2">{{ number_format($stats['on_leave']) }}</div>
+            <p class="text-xs text-gray-500 mt-1">Currently unavailable</p>
+        </div>
+    </div>
+
+    <div class="rounded-lg border bg-background shadow-sm">
+        <div class="p-4 border-b">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div><h2 class="text-xl font-semibold">Staff Directory</h2><div class="text-gray-500">{{ number_format($staff->total()) }} staff members</div></div>
+                <form method="GET" action="{{ route('web.staff.index') }}" class="flex flex-col gap-2 sm:flex-row">
+                    <div class="relative">
+                        <svg class="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.3-4.3"></path></svg>
+                        <input type="search" name="search" value="{{ request('search') }}" placeholder="Search staff..." class="h-10 rounded-md border border-gray-300 bg-background px-3 py-2 pl-8 text-sm w-full sm:w-[220px] focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <select name="department_id" class="h-10 rounded-md border border-gray-300 bg-background px-3 text-sm">
+                        <option value="">All departments</option>
+                        @foreach ($departments as $department)
+                            <option value="{{ $department->id }}" @selected((string) request('department_id') === (string) $department->id)>{{ $department->name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="status" class="h-10 rounded-md border border-gray-300 bg-background px-3 text-sm">
+                        <option value="">All statuses</option>
+                        @foreach (['Active', 'Inactive', 'On Leave'] as $status)
+                            <option value="{{ $status }}" @selected(request('status') === $status)>{{ $status }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm shadow-sm">Filter</button>
+                </form>
+            </div>
+        </div>
+        <div class="p-4">
+            @if ($staff->isEmpty())
+                <div class="text-center py-8 text-gray-500">No staff members found</div>
+            @else
+                <div class="rounded-md border overflow-x-auto">
+                    <table class="w-full text-sm whitespace-nowrap">
+                        <thead class="bg-gray-50">
+                            <tr class="border-b">
+                                <th class="h-12 px-4 text-left">Staff member</th>
+                                <th class="h-12 px-4 text-left">Role</th>
+                                <th class="h-12 px-4 text-left hidden md:table-cell">Department</th>
+                                <th class="h-12 px-4 text-left hidden md:table-cell">Specialization</th>
+                                <th class="h-12 px-4 text-left hidden md:table-cell">Contact</th>
+                                <th class="h-12 px-4 text-left">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($staff as $member)
+                                @php
+                                    $statusClasses = match ($member->status ?? 'Active') {
+                                        'Active' => 'bg-green-100 text-green-800',
+                                        'On Leave' => 'bg-yellow-100 text-yellow-800',
+                                        default => 'bg-gray-100 text-gray-800',
+                                    };
+                                @endphp
+                                <tr class="border-b hover:bg-accent hover:text-accent-foreground">
+                                    <td class="p-4"><div class="flex items-center gap-3"><span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-indigo-100 items-center justify-center font-medium text-indigo-700">{{ strtoupper(substr($member->full_name, 0, 1)) }}</span><div><div class="font-medium">{{ $member->full_name }}</div><div class="text-xs text-gray-500">{{ $member->code }}</div></div></div></td>
+                                    <td class="p-4">{{ $member->position ?: $member->role ?: 'Care team' }}</td>
+                                    <td class="p-4 hidden md:table-cell">{{ $member->department?->name ?? '—' }}</td>
+                                    <td class="p-4 hidden md:table-cell">{{ $member->specialization ?: 'General care' }}</td>
+                                    <td class="p-4 hidden md:table-cell text-xs text-gray-500">{{ $member->email ?: '—' }}</td>
+                                    <td class="p-4"><span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $member->status ?? 'Active' }}</span></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+        @include('partials.pagination', ['paginator' => $staff, 'label' => 'staff members'])
+    </div>
+</div>
 @endsection

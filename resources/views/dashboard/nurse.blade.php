@@ -1,48 +1,54 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
-@section('header', 'Dashboard')
+@section('title', 'Nurse Dashboard')
+@section('header', 'Nurse station')
 
 @section('content')
 <div class="flex flex-col gap-6">
     <div>
-        <h1 class="text-2xl lg:text-3xl font-bold tracking-tight">Good {{ now()->format('A') === 'AM' ? 'morning' : 'afternoon' }}, {{ $user->name }}</h1>
-        <p class="text-gray-500">{{ now()->format('l, d F Y') }} &middot; {{ $user->role_label }}</p>
+        <h1 class="text-2xl lg:text-3xl font-bold tracking-tight">Welcome back, {{ str($user->name)->after('Nurse ')->before(' ') }}</h1>
+        <p class="text-gray-500">{{ now()->format('l, d F Y') }} &middot; Department overview and today's care schedule.</p>
     </div>
 
-    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        @php($cards = [
-            ['label' => 'Patients', 'value' => number_format($stats['patients']), 'detail' => 'Registered records'],
-            ['label' => "Today's appointments", 'value' => number_format($stats['appointments']), 'detail' => 'Scheduled today'],
-            ['label' => 'Care team', 'value' => number_format($stats['staff']), 'detail' => 'Staff profiles'],
-            ['label' => 'Outstanding balance', 'value' => app(\App\Services\CurrencyService::class)->format($stats['outstanding']), 'detail' => 'Pending or overdue'],
-            ['label' => 'Medicines', 'value' => number_format($stats['medicines']), 'detail' => 'Inventory catalogue'],
-        ])
-        @foreach ($cards as $card)
-            <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
-                <h3 class="text-sm font-medium text-gray-500">{{ $card['label'] }}</h3>
-                <div class="text-2xl xl:text-3xl font-bold mt-2">{{ $card['value'] }}</div>
-                <p class="text-xs text-gray-500 mt-1">{{ $card['detail'] }}</p>
-            </div>
-        @endforeach
+    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+            <h3 class="text-sm font-medium text-gray-500">Today</h3>
+            <div class="text-2xl xl:text-3xl font-bold mt-2">{{ number_format($stats['today_appointments']) }}</div>
+            <p class="text-xs text-gray-500 mt-1">Appointments in your department</p>
+        </div>
+        <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+            <h3 class="text-sm font-medium text-gray-500">Active patients</h3>
+            <div class="text-2xl xl:text-3xl font-bold mt-2">{{ number_format($stats['active_patients']) }}</div>
+            <p class="text-xs text-gray-500 mt-1">Across the hospital</p>
+        </div>
+        <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+            <h3 class="text-sm font-medium text-gray-500">On duty</h3>
+            <div class="text-2xl xl:text-3xl font-bold mt-2">{{ number_format($stats['on_duty_staff']) }}</div>
+            <p class="text-xs text-gray-500 mt-1">Active staff in department</p>
+        </div>
+        <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
+            <h3 class="text-sm font-medium text-gray-500">Urgent lab requests</h3>
+            <div class="text-2xl xl:text-3xl font-bold mt-2">{{ number_format($stats['urgent_lab_requests']) }}</div>
+            <p class="text-xs text-gray-500 mt-1">Awaiting results</p>
+        </div>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
         <div class="rounded-lg border bg-background shadow-sm">
             <div class="p-4 border-b flex items-center justify-between">
-                <h2 class="text-lg font-semibold">Upcoming appointments</h2>
-                <a href="{{ route('web.appointments.index') }}" class="inline-flex items-center justify-center rounded-md bg-primary text-white hover:bg-primary/90 h-9 px-3 text-sm">Open schedule</a>
+                <h2 class="text-lg font-semibold">Today's appointments</h2>
+                <a href="{{ route('web.appointments.index') }}" class="text-sm text-indigo-600 hover:text-indigo-700">View all</a>
             </div>
             <div class="overflow-x-auto">
-                @if ($upcomingAppointments->isEmpty())
-                    <div class="text-center py-8 text-gray-500">No upcoming appointments have been recorded.</div>
+                @if ($todaysAppointments->isEmpty())
+                    <div class="text-center py-8 text-gray-500">No appointments scheduled for today.</div>
                 @else
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 border-b">
-                            <tr><th class="h-10 px-4 text-left">Date</th><th class="h-10 px-4 text-left">Patient</th><th class="h-10 px-4 text-left">Clinician</th><th class="h-10 px-4 text-left">Status</th></tr>
+                            <tr><th class="h-10 px-4 text-left">Time</th><th class="h-10 px-4 text-left">Patient</th><th class="h-10 px-4 text-left">Clinician</th><th class="h-10 px-4 text-left">Status</th></tr>
                         </thead>
                         <tbody>
-                            @foreach ($upcomingAppointments as $appointment)
+                            @foreach ($todaysAppointments as $appointment)
                                 @php
                                     $statusClasses = match ($appointment->status ?? 'Pending') {
                                         'Confirmed' => 'bg-blue-100 text-blue-700',
@@ -52,8 +58,8 @@
                                     };
                                 @endphp
                                 <tr class="border-b hover:bg-gray-50">
-                                    <td class="p-3">{{ optional($appointment->date)->format('d M Y') }}<div class="text-xs text-gray-500">{{ $appointment->start_time }}</div></td>
-                                    <td class="p-3">{{ $appointment->patient?->full_name ?? $user->patient?->full_name ?? 'Patient record' }}</td>
+                                    <td class="p-3">{{ substr((string) $appointment->start_time, 0, 5) }}</td>
+                                    <td class="p-3 font-medium">{{ $appointment->patient?->full_name ?? 'Unknown patient' }}</td>
                                     <td class="p-3">{{ $appointment->doctor?->full_name ?? 'Unassigned' }}</td>
                                     <td class="p-3"><span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $appointment->status ?? 'Pending' }}</span></td>
                                 </tr>
@@ -67,9 +73,7 @@
         <div class="rounded-lg border bg-background shadow-sm">
             <div class="p-4 border-b flex items-center justify-between">
                 <h2 class="text-lg font-semibold">Recent patients</h2>
-                @if (Route::has('web.patients.index') && ! $user->isPatient())
-                    <a href="{{ route('web.patients.index') }}" class="text-sm text-indigo-600 hover:text-indigo-700">View all</a>
-                @endif
+                <a href="{{ route('web.patients.index') }}" class="text-sm text-indigo-600 hover:text-indigo-700">View all</a>
             </div>
             <div class="overflow-x-auto">
                 @if ($recentPatients->isEmpty())
