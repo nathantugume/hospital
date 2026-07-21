@@ -24,6 +24,7 @@
         </div>
         <div class="flex flex-wrap gap-2">
             <a href="{{ route('web.patients.create') }}" class="inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm shadow-sm">+ Register patient</a>
+            <a href="{{ route('web.doctors.create') }}" class="inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm shadow-sm">+ Add doctor</a>
             <a href="{{ route('web.appointments.index') }}" class="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2 text-sm shadow-sm">Open schedule</a>
         </div>
     </div>

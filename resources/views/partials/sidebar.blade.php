@@ -34,6 +34,7 @@
 
             <div class="nav-label">Care operations</div>
             <a class="nav-link {{ request()->routeIs('web.patients.*') ? 'active' : '' }}" href="{{ route('web.patients.index') }}"><span class="nav-icon" aria-hidden="true">◉</span><span>Patients</span></a>
+            <a class="nav-link {{ request()->routeIs('web.doctors.*') ? 'active' : '' }}" href="{{ route('web.doctors.index') }}"><span class="nav-icon" aria-hidden="true">🩺</span><span>Doctors</span></a>
             <a class="nav-link {{ request()->routeIs('web.appointments.*') ? 'active' : '' }}" href="{{ route('web.appointments.index') }}"><span class="nav-icon" aria-hidden="true">◷</span><span>Appointments</span></a>
             <a class="nav-link {{ request()->routeIs('web.staff.*') ? 'active' : '' }}" href="{{ route('web.staff.index') }}"><span class="nav-icon" aria-hidden="true">✚</span><span>Care team</span></a>
             <a class="nav-link {{ request()->routeIs('web.laboratory.*') ? 'active' : '' }}" href="{{ route('web.laboratory.index') }}"><span class="nav-icon" aria-hidden="true">◇</span><span>Laboratory</span></a>

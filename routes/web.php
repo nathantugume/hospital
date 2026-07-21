@@ -3,6 +3,7 @@
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\AppointmentController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\DoctorController;
 use App\Http\Controllers\Web\InvoiceController;
 use App\Http\Controllers\Web\LabController;
 use App\Http\Controllers\Web\LegacyPageController;
@@ -68,6 +69,27 @@ Route::middleware('auth')->group(function (): void {
     Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])
         ->middleware('role:super_admin,admin')
         ->name('web.patients.destroy');
+    Route::get('/doctors', [DoctorController::class, 'index'])
+        ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
+        ->name('web.doctors.index');
+    Route::get('/doctors/create', [DoctorController::class, 'create'])
+        ->middleware('role:super_admin,admin')
+        ->name('web.doctors.create');
+    Route::post('/doctors', [DoctorController::class, 'store'])
+        ->middleware('role:super_admin,admin')
+        ->name('web.doctors.store');
+    Route::get('/doctors/{doctor}', [DoctorController::class, 'show'])
+        ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
+        ->name('web.doctors.show');
+    Route::get('/doctors/{doctor}/edit', [DoctorController::class, 'edit'])
+        ->middleware('role:super_admin,admin')
+        ->name('web.doctors.edit');
+    Route::put('/doctors/{doctor}', [DoctorController::class, 'update'])
+        ->middleware('role:super_admin,admin')
+        ->name('web.doctors.update');
+    Route::delete('/doctors/{doctor}', [DoctorController::class, 'destroy'])
+        ->middleware('role:super_admin,admin')
+        ->name('web.doctors.destroy');
     Route::get('/appointments', [AppointmentController::class, 'index'])
         ->name('web.appointments.index');
     Route::get('/care-team', [StaffController::class, 'index'])
