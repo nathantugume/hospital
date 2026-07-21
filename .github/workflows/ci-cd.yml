@@ -202,6 +202,13 @@ jobs:
           /usr/bin/php artisan route:cache
           /usr/bin/php artisan view:cache
           /usr/bin/php artisan storage:link || true
+          echo "=== DEBUG: doctor routes in this release ==="
+          /usr/bin/php artisan route:list --except-vendor 2>&1 | grep -i doctor || echo "(no doctor routes found)"
+          echo "=== DEBUG: RELEASE path and www symlink ==="
+          echo "RELEASE=$RELEASE"
+          readlink -f "$HOME_DIR/www" || true
+          echo "=== DEBUG: DoctorController present? ==="
+          ls -la "$RELEASE/app/Http/Controllers/Web/DoctorController.php" || echo "(missing)"
 
           if [ -e "$HOME_DIR/www" ] || [ -L "$HOME_DIR/www" ]; then
             mv "$HOME_DIR/www" "$HOME_DIR/www.previous.$STAMP"
