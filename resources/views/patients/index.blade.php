@@ -10,7 +10,9 @@
             <h1 class="text-2xl lg:text-3xl font-bold tracking-tight mb-2">Patients</h1>
             <p class="text-gray-500">Manage your patients and their medical records.</p>
         </div>
-        <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ Add Patient <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
+        @if (auth()->user()->hasRole(['super_admin', 'admin', 'receptionist', 'nurse', 'doctor']))
+            <a href="{{ route('web.patients.create') }}" class="inline-flex items-center justify-center rounded-md bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2 text-sm shadow-sm">+ Add Patient</a>
+        @endif
     </div>
 
     <div class="rounded-lg border bg-background shadow-sm">
@@ -53,6 +55,7 @@
                                 <th class="p-4 text-left font-semibold text-gray-700">Contact</th>
                                 <th class="p-4 text-left font-semibold text-gray-700">Last Visit</th>
                                 <th class="p-4 text-left font-semibold text-gray-700">Status</th>
+                                <th class="p-4 text-right font-semibold text-gray-700">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -65,12 +68,13 @@
                                     };
                                 @endphp
                                 <tr class="border-b hover:bg-gray-50 transition-colors">
-                                    <td class="p-4"><div class="flex items-center gap-3"><span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-indigo-100 items-center justify-center font-medium text-indigo-700">{{ strtoupper(substr($patient->full_name, 0, 1)) }}</span><span class="font-medium text-gray-900">{{ $patient->full_name }}</span></div></td>
+                                    <td class="p-4"><a href="{{ route('web.patients.show', $patient) }}" class="flex items-center gap-3"><span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-indigo-100 items-center justify-center font-medium text-indigo-700">{{ strtoupper(substr($patient->full_name, 0, 1)) }}</span><span class="font-medium text-gray-900 hover:underline">{{ $patient->full_name }}</span></a></td>
                                     <td class="p-4 text-gray-600">{{ $patient->code }}</td>
                                     <td class="p-4 text-gray-600">{{ optional($patient->date_of_birth)->age ?? '—' }} &middot; {{ $patient->gender }}</td>
                                     <td class="p-4 text-gray-600">{{ $patient->phone ?? $patient->email ?? '—' }}</td>
                                     <td class="p-4 text-gray-600">{{ optional($patient->last_visit)->format('d M Y') ?? '—' }}</td>
                                     <td class="p-4"><span class="px-2.5 py-1 rounded-full text-xs font-medium {{ $statusClasses }}">{{ $patient->status ?? 'Active' }}</span></td>
+                                    <td class="p-4 text-right"><a href="{{ route('web.patients.show', $patient) }}" class="text-sm text-indigo-600 hover:text-indigo-700">View</a></td>
                                 </tr>
                             @endforeach
                         </tbody>

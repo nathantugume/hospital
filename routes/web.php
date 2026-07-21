@@ -50,6 +50,24 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/patients', [PatientController::class, 'index'])
         ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
         ->name('web.patients.index');
+    Route::get('/patients/create', [PatientController::class, 'create'])
+        ->middleware('role:super_admin,admin,receptionist,nurse,doctor')
+        ->name('web.patients.create');
+    Route::post('/patients', [PatientController::class, 'store'])
+        ->middleware('role:super_admin,admin,receptionist,nurse,doctor')
+        ->name('web.patients.store');
+    Route::get('/patients/{patient}', [PatientController::class, 'show'])
+        ->middleware('role:super_admin,admin,doctor,nurse,receptionist,lab_technician,pharmacist,accountant,insurance_officer')
+        ->name('web.patients.show');
+    Route::get('/patients/{patient}/edit', [PatientController::class, 'edit'])
+        ->middleware('role:super_admin,admin,receptionist,nurse,doctor')
+        ->name('web.patients.edit');
+    Route::put('/patients/{patient}', [PatientController::class, 'update'])
+        ->middleware('role:super_admin,admin,receptionist,nurse,doctor')
+        ->name('web.patients.update');
+    Route::delete('/patients/{patient}', [PatientController::class, 'destroy'])
+        ->middleware('role:super_admin,admin')
+        ->name('web.patients.destroy');
     Route::get('/appointments', [AppointmentController::class, 'index'])
         ->name('web.appointments.index');
     Route::get('/care-team', [StaffController::class, 'index'])
