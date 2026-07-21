@@ -16,7 +16,12 @@ body { margin: 0; color: var(--ink); background: var(--canvas); font-family: Int
 a { color: inherit; text-decoration: none; }
 button, input, select { font: inherit; }
 .app-shell { display: flex; min-height: 100vh; }
-.app-sidebar { width: 248px; flex: 0 0 248px; display: flex; flex-direction: column; min-height: 100vh; background: #10213d; color: #dbe6f7; padding: 20px 14px; }
+/* style.css (loaded first, shared with the legacy templates) has a bare
+   `aside { position: fixed; transform: translateX(-100%); }` rule meant for
+   the templates' own JS-driven sidebar. Our .app-sidebar never gets that
+   JS's `.translate-x-0` class, so without this explicit reset it stays
+   permanently collapsed off-screen at every viewport width. */
+.app-sidebar { position: relative; transform: none; width: 248px; flex: 0 0 248px; display: flex; flex-direction: column; min-height: 100vh; background: #10213d; color: #dbe6f7; padding: 20px 14px; }
 .sidebar-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 0 10px 24px; }
 .brand { display: flex; gap: 10px; align-items: center; padding: 0; color: #fff; font-weight: 700; }
 .brand img { width: 32px; height: 32px; object-fit: contain; }
