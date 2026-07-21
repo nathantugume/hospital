@@ -213,10 +213,21 @@ jobs:
           ls -la "$RELEASE/public/" | grep -i doctor || echo "(none)"
           echo "=== DEBUG: zzz-debug-route registered? ==="
           /usr/bin/php artisan route:list --except-vendor 2>&1 | grep -i zzz || echo "(not found)"
-          echo "=== DEBUG: server-local curl to /doctors and /zzz-debug-route (bypassing edge) ==="
-          curl -s -o /dev/null -w "local doctors: %{http_code}\n" -H "Host: hospital.alwaysdata.net" "http://127.0.0.1/doctors" || echo "(local curl doctors failed)"
-          curl -s -o /dev/null -w "local zzz: %{http_code}\n" -H "Host: hospital.alwaysdata.net" "http://127.0.0.1/zzz-debug-route" || echo "(local curl zzz failed)"
-          curl -s -o /dev/null -w "local patients: %{http_code}\n" -H "Host: hospital.alwaysdata.net" "http://127.0.0.1/patients" || echo "(local curl patients failed)"
+          echo "=== DEBUG: direct php-cgi invocation bypassing Apache entirely ==="
+          for ROUTE_PATH in /doctors /zzz-debug-route /patients; do
+            echo "--- $ROUTE_PATH ---"
+            REDIRECT_STATUS=200 \
+            SCRIPT_FILENAME="$RELEASE/public/index.php" \
+            SCRIPT_NAME=/index.php \
+            REQUEST_URI="$ROUTE_PATH" \
+            REQUEST_METHOD=GET \
+            QUERY_STRING="" \
+            HTTP_HOST=hospital.alwaysdata.net \
+            SERVER_PROTOCOL=HTTP/1.1 \
+            SERVER_SOFTWARE=debug \
+            CONTENT_LENGTH=0 \
+              php-cgi "$RELEASE/public/index.php" 2>&1 | head -5
+          done
           echo "=== DEBUG: any account-level .htaccess above webroot ==="
           find "$HOME_DIR" -maxdepth 2 -iname ".htaccess" -exec echo {} \; -exec cat {} \; 2>&1 || true
 
