@@ -213,23 +213,23 @@ jobs:
           ls -la "$RELEASE/public/" | grep -i doctor || echo "(none)"
           echo "=== DEBUG: zzz-debug-route registered? ==="
           /usr/bin/php artisan route:list --except-vendor 2>&1 | grep -i zzz || echo "(not found)"
+          echo "=== DEBUG: clear log so we can isolate this exact request ==="
+          : > "$SHARED/storage/logs/laravel.log" || true
           echo "=== DEBUG: direct php-cgi invocation bypassing Apache entirely ==="
-          for ROUTE_PATH in /doctors /zzz-debug-route /patients; do
-            echo "--- $ROUTE_PATH ---"
-            REDIRECT_STATUS=200 \
-            SCRIPT_FILENAME="$RELEASE/public/index.php" \
-            SCRIPT_NAME=/index.php \
-            REQUEST_URI="$ROUTE_PATH" \
-            REQUEST_METHOD=GET \
-            QUERY_STRING="" \
-            HTTP_HOST=hospital.alwaysdata.net \
-            SERVER_PROTOCOL=HTTP/1.1 \
-            SERVER_SOFTWARE=debug \
-            CONTENT_LENGTH=0 \
-              php-cgi "$RELEASE/public/index.php" 2>&1 | head -5
-          done
-          echo "=== DEBUG: any account-level .htaccess above webroot ==="
-          find "$HOME_DIR" -maxdepth 2 -iname ".htaccess" -exec echo {} \; -exec cat {} \; 2>&1 || true
+          echo "--- /doctors ---"
+          REDIRECT_STATUS=200 \
+          SCRIPT_FILENAME="$RELEASE/public/index.php" \
+          SCRIPT_NAME=/index.php \
+          REQUEST_URI=/doctors \
+          REQUEST_METHOD=GET \
+          QUERY_STRING="" \
+          HTTP_HOST=hospital.alwaysdata.net \
+          SERVER_PROTOCOL=HTTP/1.1 \
+          SERVER_SOFTWARE=debug \
+          CONTENT_LENGTH=0 \
+            php-cgi "$RELEASE/public/index.php" 2>&1 | head -80 || true
+          echo "=== DEBUG: laravel.log after that request ==="
+          tail -100 "$SHARED/storage/logs/laravel.log" || echo "(no log)"
 
           if [ -e "$HOME_DIR/www" ] || [ -L "$HOME_DIR/www" ]; then
             mv "$HOME_DIR/www" "$HOME_DIR/www.previous.$STAMP"
