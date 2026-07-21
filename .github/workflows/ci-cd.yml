@@ -213,6 +213,12 @@ jobs:
           ls -la "$RELEASE/public/" | grep -i doctor || echo "(none)"
           echo "=== DEBUG: zzz-debug-route registered? ==="
           /usr/bin/php artisan route:list --except-vendor 2>&1 | grep -i zzz || echo "(not found)"
+          echo "=== DEBUG: server-local curl to /doctors and /zzz-debug-route (bypassing edge) ==="
+          curl -s -o /dev/null -w "local doctors: %{http_code}\n" -H "Host: hospital.alwaysdata.net" "http://127.0.0.1/doctors" || echo "(local curl doctors failed)"
+          curl -s -o /dev/null -w "local zzz: %{http_code}\n" -H "Host: hospital.alwaysdata.net" "http://127.0.0.1/zzz-debug-route" || echo "(local curl zzz failed)"
+          curl -s -o /dev/null -w "local patients: %{http_code}\n" -H "Host: hospital.alwaysdata.net" "http://127.0.0.1/patients" || echo "(local curl patients failed)"
+          echo "=== DEBUG: any account-level .htaccess above webroot ==="
+          find "$HOME_DIR" -maxdepth 2 -iname ".htaccess" -exec echo {} \; -exec cat {} \; 2>&1 || true
 
           if [ -e "$HOME_DIR/www" ] || [ -L "$HOME_DIR/www" ]; then
             mv "$HOME_DIR/www" "$HOME_DIR/www.previous.$STAMP"
