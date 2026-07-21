@@ -137,6 +137,43 @@ jobs:
             printf 'DB_PASSWORD="%s"\n' "$(escape_dotenv "$DB_PASSWORD")"
           } > /tmp/meditrack.env
 
+      - name: Free disk space on Alwaysdata before deploying
+        env:
+          SSHPASS: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
+          SSH_HOST: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+          SSH_USER: ${{ secrets.ALWAYSDATA_SSH_USER }}
+        run: |
+          test -n "$SSHPASS"
+          ssh_opts=(-4 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/tmp/meditrack-known-hosts)
+          sshpass -e ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE_SCRIPT'
+          set -uo pipefail
+          HOME_DIR=/home/hospital
+          echo "=== disk usage before cleanup ==="
+          df -h "$HOME_DIR" || true
+          echo "=== releases before cleanup ==="
+          ls -la "$HOME_DIR/releases" 2>/dev/null || true
+          du -sh "$HOME_DIR"/releases/* 2>/dev/null || true
+          echo "=== www.previous.* entries ==="
+          ls -la "$HOME_DIR" | grep 'www.previous' || true
+          echo "=== keeping only the release the live www symlink points to, deleting the rest ==="
+          LIVE_RELEASE="$(readlink -f "$HOME_DIR/www" 2>/dev/null | xargs dirname || true)"
+          echo "LIVE_RELEASE=$LIVE_RELEASE"
+          for d in "$HOME_DIR"/releases/*/; do
+            d="${d%/}"
+            if [ "$d" != "$LIVE_RELEASE" ]; then
+              echo "removing $d"
+              rm -rf "$d"
+            fi
+          done
+          echo "=== removing all www.previous.* backups ==="
+          rm -rf "$HOME_DIR"/www.previous.* 2>/dev/null || true
+          echo "=== removing any stale release archive ==="
+          rm -f "$HOME_DIR/meditrack-release.tgz" || true
+          echo "=== disk usage after cleanup ==="
+          df -h "$HOME_DIR" || true
+          ls -la "$HOME_DIR/releases" 2>/dev/null || true
+          REMOTE_SCRIPT
+
       - name: Package release
         run: |
           rm -rf /tmp/meditrack-release
@@ -202,34 +239,6 @@ jobs:
           /usr/bin/php artisan route:cache
           /usr/bin/php artisan view:cache
           /usr/bin/php artisan storage:link || true
-          echo "=== DEBUG: doctor routes in this release ==="
-          /usr/bin/php artisan route:list --except-vendor 2>&1 | grep -i doctor || echo "(no doctor routes found)"
-          echo "=== DEBUG: RELEASE path and www symlink ==="
-          echo "RELEASE=$RELEASE"
-          readlink -f "$HOME_DIR/www" || true
-          echo "=== DEBUG: DoctorController present? ==="
-          ls -la "$RELEASE/app/Http/Controllers/Web/DoctorController.php" || echo "(missing)"
-          echo "=== DEBUG: public/doctors* entries ==="
-          ls -la "$RELEASE/public/" | grep -i doctor || echo "(none)"
-          echo "=== DEBUG: zzz-debug-route registered? ==="
-          /usr/bin/php artisan route:list --except-vendor 2>&1 | grep -i zzz || echo "(not found)"
-          echo "=== DEBUG: clear log so we can isolate this exact request ==="
-          : > "$SHARED/storage/logs/laravel.log" || true
-          echo "=== DEBUG: direct php-cgi invocation bypassing Apache entirely ==="
-          echo "--- /doctors ---"
-          REDIRECT_STATUS=200 \
-          SCRIPT_FILENAME="$RELEASE/public/index.php" \
-          SCRIPT_NAME=/index.php \
-          REQUEST_URI=/doctors \
-          REQUEST_METHOD=GET \
-          QUERY_STRING="" \
-          HTTP_HOST=hospital.alwaysdata.net \
-          SERVER_PROTOCOL=HTTP/1.1 \
-          SERVER_SOFTWARE=debug \
-          CONTENT_LENGTH=0 \
-            php-cgi "$RELEASE/public/index.php" 2>&1 | head -80 || true
-          echo "=== DEBUG: laravel.log after that request ==="
-          tail -100 "$SHARED/storage/logs/laravel.log" || echo "(no log)"
 
           if [ -e "$HOME_DIR/www" ] || [ -L "$HOME_DIR/www" ]; then
             mv "$HOME_DIR/www" "$HOME_DIR/www.previous.$STAMP"
@@ -239,6 +248,8 @@ jobs:
 
           find "$HOME_DIR/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
             | sort -nr | tail -n +6 | cut -d' ' -f2- | xargs -r rm -rf
+          find "$HOME_DIR" -maxdepth 1 -name 'www.previous.*' -printf '%T@ %p\n' \
+            | sort -nr | tail -n +2 | cut -d' ' -f2- | xargs -r rm -rf
           REMOTE_SCRIPT
 
       - name: Smoke test production site
