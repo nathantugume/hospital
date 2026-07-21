@@ -209,6 +209,10 @@ jobs:
           readlink -f "$HOME_DIR/www" || true
           echo "=== DEBUG: DoctorController present? ==="
           ls -la "$RELEASE/app/Http/Controllers/Web/DoctorController.php" || echo "(missing)"
+          echo "=== DEBUG: public/doctors* entries ==="
+          ls -la "$RELEASE/public/" | grep -i doctor || echo "(none)"
+          echo "=== DEBUG: zzz-debug-route registered? ==="
+          /usr/bin/php artisan route:list --except-vendor 2>&1 | grep -i zzz || echo "(not found)"
 
           if [ -e "$HOME_DIR/www" ] || [ -L "$HOME_DIR/www" ]; then
             mv "$HOME_DIR/www" "$HOME_DIR/www.previous.$STAMP"

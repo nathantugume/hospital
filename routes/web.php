@@ -15,6 +15,8 @@ use App\Http\Controllers\Web\SettingsController;
 use App\Http\Controllers\Web\StaffController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/zzz-debug-route', fn () => 'debug-route-ok');
+
 Route::middleware('guest')->group(function (): void {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
     Route::post('/login', [AuthController::class, 'store'])
