@@ -102,13 +102,13 @@
                                     };
                                 @endphp
                                 <tr class="border-b hover:bg-gray-50 transition-colors">
-                                    <td class="p-4"><a href="{{ route('web.doctors.show', $doctor) }}" class="flex items-center gap-3"><span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-indigo-100 items-center justify-center font-medium text-indigo-700">{{ strtoupper(substr($doctor->first_name, 0, 1)) }}{{ strtoupper(substr($doctor->last_name, 0, 1)) }}</span><span class="font-medium text-gray-900 hover:underline">Dr. {{ $doctor->full_name }}</span></a></td>
+                                    <td class="p-4"><a href="{{ route('web.doctors.show', $doctor) }}" class="flex items-center gap-3"><img src="{{ asset('user.png') }}" class="h-10 w-10 rounded-full" alt=""><span class="font-medium text-gray-900 hover:underline">Dr. {{ $doctor->full_name }}</span></a></td>
                                     <td class="p-4 text-gray-700">{{ $doctor->specialization }}</td>
                                     <td class="p-4"><span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $doctor->status }}</span></td>
                                     <td class="p-4 text-gray-700">{{ number_format($doctor->real_patients_count) }}</td>
                                     <td class="p-4 text-gray-700">{{ $doctor->experience_years }} yrs</td>
                                     <td class="p-4"><div class="text-sm"><p class="mb-1 text-gray-800">{{ $doctor->email }}</p><p class="text-gray-500">{{ $doctor->phone }}</p></div></td>
-                                    <td class="p-4 text-right"><a href="{{ route('web.doctors.show', $doctor) }}" class="text-sm text-indigo-600 hover:text-indigo-700">View</a></td>
+                                    <td class="p-4 text-right">@include('partials.row-actions', ['record' => $doctor, 'entity' => 'doctors'])</td>
                                 </tr>
                             @endforeach
                         </tbody>

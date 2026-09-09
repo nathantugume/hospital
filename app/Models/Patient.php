@@ -69,6 +69,7 @@ class Patient extends Model
     public function primaryInsurance(): HasOne { return $this->hasOne(PatientInsurance::class)->where('is_primary', true); }
     public function consents(): HasMany { return $this->hasMany(PatientConsent::class); }
     public function appointments(): HasMany { return $this->hasMany(Appointment::class); }
+    public function latestAppointment(): HasOne { return $this->hasOne(Appointment::class)->ofMany(['date' => 'max', 'id' => 'max']); }
     public function appointmentRequests(): HasMany { return $this->hasMany(AppointmentRequest::class); }
     public function invoices(): HasMany { return $this->hasMany(Invoice::class); }
     public function insuranceClaims(): HasMany { return $this->hasMany(InsuranceClaim::class); }

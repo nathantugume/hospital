@@ -14,6 +14,9 @@ use App\Models\Prescription;
 use App\Models\Staff;
 use App\Models\TestRequest;
 use App\Services\CurrencyService;
+use App\Services\DashboardAnalytics;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -40,6 +43,18 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $today = today();
+        $range = Validator::make([
+            'from' => $request->input('from', $today->copy()->startOfMonth()->subMonths(5)->toDateString()),
+            'to' => $request->input('to', $today->toDateString()),
+        ], [
+            'from' => ['required', 'date_format:Y-m-d'],
+            'to' => ['required', 'date_format:Y-m-d', 'after_or_equal:from'],
+        ])->validate();
+        $from = \Carbon\Carbon::parse($range['from'])->startOfDay();
+        $to = \Carbon\Carbon::parse($range['to'])->endOfDay();
+        if ($from->diffInDays($to->copy()->startOfDay()) > 366) {
+            throw ValidationException::withMessages(['to' => 'Choose a reporting period of one year or less.']);
+        }
 
         $stats = [
             'active_patients' => Patient::where('status', 'Active')->count(),
@@ -67,13 +82,36 @@ class DashboardController extends Controller
             ->map(fn ($appointments): int => $appointments->count())
             ->sortDesc();
 
+        // Aggregate the real reporting period for the reference dashboard chart.
+        $chart = collect(\Carbon\CarbonPeriod::create($from->copy()->startOfMonth(), '1 month', $to))
+            ->map(function ($month) use ($from, $to): array {
+            $start = $month->copy()->max($from);
+            $end = $month->copy()->endOfMonth()->min($to);
+
+            return [
+                'month' => $month->format('M Y'),
+                'revenue' => (float) Invoice::where('status', 'Paid')
+                    ->whereDate('payment_date', '>=', $start->toDateString())
+                    ->whereDate('payment_date', '<=', $end->toDateString())->sum('paid_amount'),
+                'visits' => Appointment::whereDate('date', '>=', $start->toDateString())
+                    ->whereDate('date', '<=', $end->toDateString())->count(),
+            ];
+        });
+        $analytics = app(DashboardAnalytics::class)->forPeriod($from, $to);
+        $dashboardNotifications = \App\Models\Notification::where('user_id', $user->id)->latest()->limit(12)->get();
+
         return view('dashboard.admin', compact(
             'user',
             'currency',
             'stats',
             'upcomingAppointments',
             'recentInvoices',
-            'appointmentStatus'
+            'appointmentStatus',
+            'chart',
+            'dashboardNotifications',
+            'analytics',
+            'from',
+            'to'
         ));
     }
 
@@ -212,7 +250,14 @@ class DashboardController extends Controller
         $patient = $user->patient;
 
         if (! $patient) {
-            return $this->general($request);
+            return view('dashboard.patient', [
+                'user' => $user,
+                'stats' => ['appointments' => 0, 'prescriptions' => 0, 'lab_results' => 0, 'outstanding' => 0],
+                'upcomingAppointments' => collect(),
+                'recentPrescriptions' => collect(),
+                'recentLabResults' => collect(),
+                'invoices' => collect(),
+            ]);
         }
 
         $stats = [

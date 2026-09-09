@@ -22,9 +22,9 @@ class BladeWebTest extends TestCase
             ->assertOk()
             ->assertSee('MediTrack HMS')
             ->assertSee('Sign in')
-            ->assertSee('Demo access')
-            ->assertSee('admin@meditrack.ea')
-            ->assertSee('password123');
+            ->assertSee('Healthcare administration simplified')
+            ->assertSee('name="email"', false)
+            ->assertDontSee('password123');
     }
 
     public function test_admin_can_login_and_view_the_blade_dashboard(): void
@@ -82,7 +82,7 @@ class BladeWebTest extends TestCase
         foreach ($pages as [$url, $heading]) {
             $response = $this->actingAs($user)->get($url)->assertOk()->assertSee($heading);
 
-            $this->assertSame(1, substr_count($response->getContent(), '<aside class="app-sidebar"'));
+            $this->assertSame(1, substr_count($response->getContent(), 'id="primary-navigation"'));
         }
     }
 
@@ -323,7 +323,7 @@ class BladeWebTest extends TestCase
             ->assertSee('data-menu-toggle');
 
         $this->assertSame(1, substr_count($response->getContent(), '<!doctype html>'));
-        $this->assertSame(1, substr_count($response->getContent(), '<aside class="app-sidebar"'));
+        $this->assertSame(1, substr_count($response->getContent(), 'id="primary-navigation"'));
 
         $this->actingAs($user)
             ->get('/financial-reports.html')

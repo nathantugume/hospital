@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\CurrencyService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +24,10 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        View::composer('partials.header', function ($view): void {
+            $view->with('headerNotifications', \App\Models\Notification::query()
+                ->where('user_id', auth()->id())->latest()->limit(8)->get());
+        });
         if ($this->app->environment('production')) {
             URL::forceScheme('https');
         }

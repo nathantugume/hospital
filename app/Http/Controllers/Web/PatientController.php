@@ -25,6 +25,7 @@ class PatientController extends Controller
     public function index(Request $request): View
     {
         $patients = Patient::query()
+            ->with('latestAppointment.doctor')
             ->when($request->string('search')->trim()->value(), function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('first_name', 'like', "%{$search}%")

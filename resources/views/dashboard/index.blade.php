@@ -11,13 +11,15 @@
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        @php($cards = [
+        @php
+        $cards = [
             ['label' => 'Patients', 'value' => number_format($stats['patients']), 'detail' => 'Registered records'],
             ['label' => "Today's appointments", 'value' => number_format($stats['appointments']), 'detail' => 'Scheduled today'],
             ['label' => 'Care team', 'value' => number_format($stats['staff']), 'detail' => 'Staff profiles'],
             ['label' => 'Outstanding balance', 'value' => app(\App\Services\CurrencyService::class)->format($stats['outstanding']), 'detail' => 'Pending or overdue'],
             ['label' => 'Medicines', 'value' => number_format($stats['medicines']), 'detail' => 'Inventory catalogue'],
-        ])
+        ];
+        @endphp
         @foreach ($cards as $card)
             <div class="rounded-lg border bg-white dark:bg-background shadow-sm hover:shadow-md transition p-4">
                 <h3 class="text-sm font-medium text-gray-500">{{ $card['label'] }}</h3>
