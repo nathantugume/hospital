@@ -129,6 +129,14 @@ if [ -e "$HOME_DIR/www" ] || [ -L "$HOME_DIR/www" ]; then
   mv "$HOME_DIR/www" "$HOME_DIR/www.previous.$STAMP"
 fi
 ln -s "$RELEASE/public" "$HOME_DIR/www"
+
+# Alwaysdata serves PHP through a long-lived mod_fcgid worker. Recycle workers
+# owned by this account so the new release is loaded immediately after the
+# document-root symlink changes.
+for pid in $(pgrep -u "$(id -u)" -x php-cgi 2>/dev/null || true); do
+  kill "$pid" 2>/dev/null || true
+done
+
 rm -f "$ARCHIVE"
 
 find "$HOME_DIR/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
