@@ -4,6 +4,14 @@ on:
   push:
   pull_request:
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Deploy the update or inspect the currently published release
+        type: choice
+        default: deploy
+        options:
+          - deploy
+          - diagnose
 
 permissions:
   contents: read
@@ -18,6 +26,7 @@ env:
 
 jobs:
   quality:
+    if: github.event.inputs.operation != 'diagnose'
     name: Test and validate
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -81,7 +90,7 @@ jobs:
     needs: quality
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'workflow_dispatch'
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.operation != 'diagnose')
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 15
@@ -271,3 +280,28 @@ jobs:
           test "$asset_code" = 200
           test "$health_code" = 200
           printf 'protected_home=%s login=%s asset=%s health=%s\n' "$home_code" "$login_code" "$asset_code" "$health_code"
+
+  diagnose:
+    name: Inspect published release
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'diagnose'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - name: Inspect release and PHP workers
+        env:
+          SSHPASS: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
+          SSH_HOST: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+          SSH_USER: ${{ secrets.ALWAYSDATA_SSH_USER }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install --yes sshpass
+          sshpass -e ssh -4 -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE_SCRIPT'
+          set -euo pipefail
+          RELEASE="$(dirname "$(readlink -f /home/hospital/www)")"
+          echo "Published release: $RELEASE"
+          cd "$RELEASE"
+          sha256sum routes/web.php bootstrap/cache/routes-v7.php
+          /usr/bin/php artisan route:list --path=appointment-requests
+          /usr/bin/php artisan migrate:status | tail -10
+          ps -u "$(id -u)" -o pid,comm
+          REMOTE_SCRIPT
