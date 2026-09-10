@@ -1,0 +1,1789 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Medi-track | Add Patient</title>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,100..900&display=swap" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+    
+    
+    <style>
+        * { font-family: 'Inter', system-ui, sans-serif; }
+        body { background-color: #f9fafb; }
+        
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        
+
+        .dropdown-content {
+            animation: fadeIn 0.15s ease-out;
+            position: absolute;
+            z-index: 50;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+            margin-top: 4px;
+            min-width: 200px;
+            border: 1px solid #e5e7eb;
+        }
+        body.dark .dropdown-content { background: #2a2a2a; border-color: #404040; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .switch-toggle { position: relative; display: inline-block; width: 44px; height: 24px; }
+        .switch-toggle input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: 0.3s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: 0.3s; border-radius: 50%; }
+        input:checked + .slider { background-color: #4f46e5; }
+        input:checked + .slider:before { transform: translateX(20px); }
+        body.dark .slider { background-color: #4b5563; }
+        
+        /* Radix-style tab active state */
+        [data-state="active"] {
+            background-color: white !important;
+            color: #1f2937 !important;
+            box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+        }
+        body.dark [data-state="active"] {
+            background-color: #131212 !important;
+            color: #e5e5e5 !important;
+        }
+        [data-state="inactive"] {
+            background-color: transparent !important;
+            color: #6b7280 !important;
+        }
+        body.dark [data-state="inactive"] { color: #9ca3af !important; }
+
+        /* Helper for text contains selector */
+label:contains(text) {
+    font-weight: normal;
+}
+    </style>
+</head>
+<body class="bg-gray-50 font-sans antialiased">
+
+<div class="flex min-h-screen flex-col">
+    <!-- Header -->
+        <header class="sticky top-0 z-40 border-b bg-background shadow-sm border-gray-200">
+            <div class="flex h-16 items-center justify-between px-4 md:px-6">
+                <div class="flex items-center gap-2">
+                    <button class="focus:outline-none"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"></line><line x1="4" x2="20" y1="6" y2="6"></line><line x1="4" x2="20" y1="18" y2="18"></line></svg></button>
+                    <a href="index.html" id="headerLogo" class="flex items-center space-x-2">
+                        <img alt="Medi-track" src="logo.png" class="h-8 " >
+                        <span class="font-bold text-xl">Medi-track</span>
+                    </a>                
+                </div>
+            <div class="flex items-center gap-4">
+                <!-- Fullscreen Toggle Button -->
+                <button id="meditrack-lang-btn" class="inline-flex items-center justify-center gap-1 rounded-md border border-gray-200 bg-white px-2.5 py-1.5 text-sm font-medium text-gray-700 transition-colors hover:border-indigo-500 hover:bg-gray-50 size-10" aria-label="Language">
+                        <span style="font-size: 16px;">🇬🇧</span>
+                        <span class="hidden sm:inline">EN</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                
+                <!-- Theme Toggle Button -->
+                <button id="themeToggleBtn" class="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors hover:bg-gray-100 size-10" aria-label="Toggle theme">
+                    <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="hidden text-gray-600"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2"></path><path d="M12 20v2"></path><path d="m4.93 4.93 1.41 1.41"></path><path d="m17.66 17.66 1.41 1.41"></path><path d="M2 12h2"></path><path d="M20 12h2"></path><path d="m6.34 17.66-1.41 1.41"></path><path d="m19.07 4.93-1.41 1.41"></path></svg>
+                    <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-gray-600"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path></svg>
+                </button>
+                
+                <!-- Notifications Dropdown -->
+                <div class="relative">
+                    <button id="notificationsBtn" class="inline-flex items-center justify-center rounded-md transition-colors hover:bg-gray-100 size-10 relative">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg>
+                        <span class="absolute right-1 top-1 flex h-2 w-2 rounded-full bg-red-500"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span></span>
+                    </button>
+                    <div id="notificationsDropdown" class="hidden absolute right-0 mt-2 z-50 w-80 rounded-md border bg-background shadow-lg overflow-hidden">
+                        <div class="px-3 py-2 text-sm font-semibold flex justify-between border-b"><span>Notifications</span><button id="markAllReadBtn" class="text-xs text-indigo-600">Mark all as read</button></div>
+                        <div class="max-h-[300px] overflow-y-auto">
+                            <div role="group">
+                                <div role="menuitem" class="relative flex cursor-default select-none items-center gap-2 rounded-sm text-sm outline-none transition-colors focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 p-0 focus:bg-transparent" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">
+                                    
+                                    <div class="flex items-start gap-2 p-3 text-sm transition-colors hover:bg-muted/50 rounded-md bg-muted/30">
+                                        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                                            <span role="img" aria-label="appointment">🗓️</span></div><div class="flex-1 space-y-1">
+                                                <div class="flex items-center justify-between">
+                                                    <p class="font-semibold">New appointment request</p>
+                                                    <p class="text-xs text-muted-foreground">Just now</p>
+                                                </div>
+                                                <p class="text-xs text-muted-foreground">Dr. Ssemwogerere has a new appointment request from John Donanto</p>
+                                            </div>
+                                            <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground size-10 h-6 w-6 shrink-0 rounded-full">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-3 w-3"><path d="M20 6 9 17l-5-5"></path></svg>
+                                                <span class="sr-only">Mark as read</span>
+                                            </button>
+                                            </div>
+                                            </div>
+                                            <div role="menuitem" class="relative flex cursor-default select-none items-center gap-2 rounded-sm text-sm outline-none transition-colors focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 p-0 focus:bg-transparent" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">
+                                                <div class="flex items-start gap-2 p-3 text-sm transition-colors hover:bg-muted/50 rounded-md bg-muted/30">
+                                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                                                        <span role="img" aria-label="prescription">💊</span></div><div class="flex-1 space-y-1">
+                                                            <div class="flex items-center justify-between">
+                                                                <p class="font-semibold">Prescription renewal</p>
+                                                                <p class="text-xs text-muted-foreground">5 min ago</p>
+                                                            </div>
+                                                            <p class="text-xs text-muted-foreground">Patient Emily Johnson requested a prescription renewal</p>
+                                                        </div>
+                                                        <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground size-10 h-6 w-6 shrink-0 rounded-full">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-3 w-3"><path d="M20 6 9 17l-5-5"></path></svg>
+                                                            <span class="sr-only">Mark as read</span></button></div></div><div role="menuitem" class="relative flex cursor-default select-none items-center gap-2 rounded-sm text-sm outline-none transition-colors focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 p-0 focus:bg-transparent" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">
+                                                                <div class="flex items-start gap-2 p-3 text-sm transition-colors hover:bg-muted/50 rounded-md bg-muted/30">
+                                                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                                                                        <span role="img" aria-label="system">🔔</span>
+                                                                    </div>
+                                                                        <div class="flex-1 space-y-1">
+                                                                            <div class="flex items-center justify-between">
+                                                                            <p class="font-semibold">Lab results available</p>
+                                                                            <p class="text-xs text-muted-foreground">1 hour ago</p>
+                                                                        </div>
+                                                                        <p class="text-xs text-muted-foreground">New lab results are available for patient Michael Lee</p>
+                                                                    </div>
+                                                                    <button class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground size-10 h-6 w-6 shrink-0 rounded-full">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check h-3 w-3"><path d="M20 6 9 17l-5-5"></path></svg>
+                                                                        <span class="sr-only">Mark as read</span>
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <div role="menuitem" class="relative flex cursor-default select-none items-center gap-2 rounded-sm text-sm outline-none transition-colors focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 p-0 focus:bg-transparent" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">
+                                                                <div class="flex items-start gap-2 p-3 text-sm transition-colors hover:bg-muted/50 rounded-md opacity-80">
+                                                                    <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                                                                        <span role="img" aria-label="message">💬</span></div>
+                                                                        <div class="flex-1 space-y-1">
+                                                                            <div class="flex items-center justify-between"><p class="font-medium">New message</p>
+                                                                                <p class="text-xs text-muted-foreground">3 hours ago</p>
+                                                                            </div>
+                                                                            <p class="text-xs text-muted-foreground">You have a new message from Dr. Wamala</p>
+                                                                        </div>
+                                                                </div>
+                                                            </div>
+                                                                        <div role="menuitem" class="relative flex cursor-default select-none items-center gap-2 rounded-sm text-sm outline-none transition-colors focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 p-0 focus:bg-transparent" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">
+                                                                            <div class="flex items-start gap-2 p-3 text-sm transition-colors hover:bg-muted/50 rounded-md opacity-80">
+                                                                                <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                                                                                    <span role="img" aria-label="billing">💰</span>
+                                                                                </div>
+                                                                                    <div class="flex-1 space-y-1">
+                                                                                        <div class="flex items-center justify-between">
+                                                                                            <p class="font-medium">Payment received</p>
+                                                                                            <p class="text-xs text-muted-foreground">Yesterday</p>
+                                                                                        </div>
+                                                                                        <p class="text-xs text-muted-foreground">Payment of $150 received from patient Wanjiru Sarah</p>
+                                                                                    </div>
+                                                                            </div>
+                            </div>
+                        </div>
+                                </div>
+                        <div class="p-2 text-center border-t"><a href="notifications.html" class="text-sm text-indigo-600">View all notifications</a></div>
+                    </div>
+                </div>
+                
+                <!-- Profile Dropdown with Chat & Support -->
+                <div class="relative">
+                    <button id="profileBtn" class="flex items-center justify-center h-8 w-8 rounded-full hover:ring-2 hover:ring-gray-200">
+                        <img src="user.png" alt="Profile" class="h-8 w-8 rounded-full object-cover">
+                    </button>
+                    <div id="profileDropdown" class="hidden absolute right-0 mt-2 z-50 w-56 rounded-md border bg-background shadow-lg p-1">
+                        <div class="px-2 py-1.5 border-b">
+                            <p class="font-medium text-sm">Dr. Nakato Sarah</p>
+                            <p class="text-xs text-gray-500">admin@hospital.ug</p>
+                        </div>
+                        
+                        <!-- Profile -->
+                        <a href="profile-setting.html" class="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-gray-100 rounded">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                                <circle cx="12" cy="7" r="4"></circle>
+                            </svg>
+                            Profile
+                        </a>
+                        
+                        <!-- Settings -->
+                        <a href="settings.html" class="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-gray-100 rounded">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            Settings
+                        </a>
+                        
+                        <!-- Chat -->
+                        <a href="chat.html" class="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-gray-100 rounded">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path>
+                            </svg>
+                            Chat
+                        </a>
+                        
+                        <!-- Support -->
+                        <a href="support.html" class="flex items-center gap-2 px-2 py-1.5 text-sm hover:bg-gray-100 rounded">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <path d="M12 17h.01"></path>
+                            </svg>
+                            Support
+                        </a>
+                        
+                        <div class="border-t my-1"></div>
+                        
+                        <!-- Logout -->
+                        <a href="login.html" class="flex items-center gap-2 px-2 py-1.5 text-sm text-red-600 hover:bg-gray-100 rounded">
+                            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                <polyline points="16 17 21 12 16 7"></polyline>
+                                <line x1="21" x2="9" y1="12" y2="12"></line>
+                            </svg>
+                            Log out
+                        </a>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </header>
+
+    <div class="flex flex-1 items-start relative">
+            <!-- Sidebar (Full Navigation with Accordions) -->
+            <aside class="!fixed h-full left-0 bottom-0 z-50 flex w-64 flex-col border-r bg-background transition-transform duration-300 ease-in-out translate-x-0 shadow-lg">
+                <div class="flex py-3 xl:py-3.5 items-center justify-between px-4 border-b border-gray-200">
+                    <a class="flex items-center space-x-2" href="index.html"><img alt="Meditrack" loading="lazy" width="36" height="36" decoding="async" data-nimg="1" src="logo.png" style="color: transparent;">
+                        <span class="font-bold inline-block">Medi-track</span>
+                    </a>
+                    <button class="inline-flex items-center justify-center shrink-0 gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:bg-gray-100 hover:text-gray-900 size-10 xl:hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x size-6 text-gray-600"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                        <span class="sr-only">Close sidebar</span>
+                    </button>
+                </div>
+                <div class="flex-1 py-2 border-t border-gray-200 h-full overflow-y-auto custom-scrollbar">
+                    <nav class="space-y-1 px-2">
+                        <!-- Dashboard Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="dashboard-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-dashboard mr-2 h-4 w-4"><rect width="7" height="9" x="3" y="3" rx="1"></rect><rect width="7" height="5" x="14" y="3" rx="1"></rect><rect width="7" height="9" x="14" y="12" rx="1"></rect><rect width="7" height="5" x="3" y="16" rx="1"></rect></svg>
+                                    Dashboard
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="dashboard-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="dashboard-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="index.html">Admin Dashboard</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="doctor-dashboard.html">Doctor Dashboard</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="patient-dashboard.html">Patient Dashboard</a>
+                            </div>
+                        </div>
+
+                        <!-- Doctors Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="doctors-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-users mr-2 h-4 w-4"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M22 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                                    Doctors
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="doctors-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="doctors-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="doctors.html">Doctors List</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="add-doctor.html">Add Doctor</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="schedule.html">Doctor Schedule</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="specialisation.html">Specializations</a>
+                            </div>
+                        </div>
+
+                                    <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors bg-indigo-50 text-indigo-700" href="patients.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round mr-2 h-4 w-4"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+                                Patients
+                            </a>
+                        </div>
+
+                        <!-- Appointments Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="appointments-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar mr-2 h-4 w-4"><path d="M8 2v4"></path><path d="M16 2v4"></path><rect width="18" height="18" x="3" y="4" rx="2"></rect><path d="M3 10h18"></path></svg>
+                                    Appointments
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="appointments-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="appointments-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="appointments.html">All Appointments</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="appointment-calendar.html">Calendar View</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="appointment-requests.html">Appointment Requests</a>
+                            </div>
+                        </div>
+
+                        <!-- Prescriptions Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="prescriptions-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-briefcase-medical-icon lucide-briefcase-medical mr-2 h-4 w-4">
+                                        <path d="M12 11v4"/>
+                                        <path d="M14 13h-4"/>
+                                        <path d="M16 6V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                                        <path d="M18 6v14"/>
+                                        <path d="M6 6v14"/>
+                                        <rect width="20" height="14" x="2" y="6" rx="2"/>
+                                    </svg>
+                                    Prescriptions
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="prescriptions-arrow h-4 w-4 transition-transform duration-200">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                            <div class="prescriptions-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="prescriptions.html">All Prescriptions</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="create-prescription.html">Create Prescription</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="medicine-templates.html">Medicine Templates</a>
+                            </div>
+                        </div>
+
+            <!-- Ambulance Accordion -->
+            <div class="space-y-1 custom-scrollbar">
+                <button class="ambulance-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-ambulance mr-2 h-4 w-4"><path d="M10 10H6"></path><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"></path><path d="M19 18h2a1 1 0 0 0 1-1v-3.28a1 1 0 0 0-.684-.948l-1.923-.641a1 1 0 0 1-.578-.502l-1.539-3.076A1 1 0 0 0 16.382 8H14"></path><path d="M8 8v4"></path><path d="M9 18h6"></path><circle cx="17" cy="18" r="2"></circle><circle cx="7" cy="18" r="2"></circle></svg>
+                        Ambulance
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="ambulance-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="ambulance-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="ambulance-calls.html">Ambulance Call List</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="ambulance/list">Ambulance List</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="ambulance-details.html">Ambulance Details</a>
+                </div>
+            </div>
+
+            <!-- Laboratory Accordion (NEW) -->
+            <div class="space-y-1 custom-scrollbar">
+                <button class="laboratory-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flask-conical mr-2 h-4 w-4"><path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"></path><path d="M8.5 2h7"></path><path d="M12 2v4"></path></svg>
+                        Laboratory
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="laboratory-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="laboratory-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="lab-dashboard.html">Lab Dashboard</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="lab-tests-management.html">Test Catalog</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="test-requests.html">Test Requests</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="sample-collection.html">Sample Collection</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="result-entry.html">Result Entry</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="lab-equipment.html">Equipment</a>
+                </div>
+            </div>
+
+<!-- Vaccination Accordion -->
+<div class="space-y-1 custom-scrollbar">
+    <button class="vaccination-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+        <div class="flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-syringe mr-2 h-4 w-4"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>
+            Vaccination
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="vaccination-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+    <div class="vaccination-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+        <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="vaccination-schedule.html">Schedule</a>
+        <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="vaccination.html">Records</a>
+    </div>
+</div>
+
+            <!-- Physiotherapy Accordion -->
+            <div class="space-y-1 custom-scrollbar">
+                <button class="physio-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-activity mr-2 h-4 w-4"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        Physiotherapy
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="physio-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="physio-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="physiotherapy-dashboard.html">Dashboard</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="physiotherapy-schedule.html">Schedule</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="physiotherapy-treatment-plans.html">Treatment Plans</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="physiotherapy-exercises.html">Exercise Library</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="physiotherapy-hep.html">Home Exercises</a>
+                </div>
+            </div>
+
+            <!-- Nutrition / Dietary Accordion -->
+            <div class="space-y-1 custom-scrollbar">
+                <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="nutrition.html">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-soup-icon lucide-soup mr-2 h-4 w-4"><path d="M12 21a9 9 0 0 0 9-9H3a9 9 0 0 0 9 9Z"/><path d="M7 21h10"/><path d="M19.5 12 22 6"/><path d="M16.25 3c.27.1.8.53.75 1.36-.06.83-.93 1.2-1 2.02-.05.78.34 1.24.73 1.62"/><path d="M11.25 3c.27.1.8.53.74 1.36-.05.83-.93 1.2-.98 2.02-.06.78.33 1.24.72 1.62"/><path d="M6.25 3c.27.1.8.53.75 1.36-.06.83-.93 1.2-1 2.02-.05.78.34 1.24.74 1.62"/></svg>                      
+                    Nutrition
+                </a>
+            </div>
+
+            <!-- OT / Surgery Accordion (NEW) -->
+            <div class="space-y-1 custom-scrollbar">
+                <button class="surgery-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                    <div class="flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-scalpel mr-2 h-4 w-4"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                        OT / Surgery
+                    </div>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="surgery-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </button>
+                <div class="surgery-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="ot-dashboard.html">OT Dashboard</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="ot-schedule.html">OT Schedule</a>
+                </div>
+            </div>
+
+            <!-- Pharmacy Accordion -->
+            <div class="space-y-1 custom-scrollbar">
+                <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="medicine.html">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pill mr-2 h-4 w-4"><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z"></path><path d="m8.5 8.5 7 7"></path></svg>
+                    Pharmacy
+                </a>
+            </div>
+
+                        <!-- Blood Bank Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="bloodbank-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-droplet mr-2 h-4 w-4"><path d="M12 22a7 7 0 0 0 7-7c0-2-1-3.9-3-5.5s-3.5-4-4-6.5c-.5 2.5-2 4.9-4 6.5C6 11.1 5 13 5 15a7 7 0 0 0 7 7z"></path></svg>
+                                    Blood Bank
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="bloodbank-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="bloodbank-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="blood-stock.html">Blood Stock</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="blood-donors.html">Blood Donor</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="issued-blood.html">Blood Issued</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="add-blood-unit.html">Add Blood Unit</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="issue-blood.html">Issue Blood</a>
+                            </div>
+                        </div>
+
+                        <!-- Billing Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="billing-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-receipt mr-2 h-4 w-4"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"></path><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path><path d="M12 17.5v-11"></path></svg>
+                                    Billing
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="billing-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="billing-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="billing.html">Invoices List</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="create-invoice.html">Create Invoice</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="payments.html">Payments History</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="insurance-claims.html">Insurance Claims</a>
+                            </div>
+                        </div>
+
+                        <!-- Departments Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="departments-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-building2 mr-2 h-4 w-4"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path><path d="M10 6h4"></path><path d="M10 10h4"></path><path d="M10 14h4"></path><path d="M10 18h4"></path></svg>
+                                    Departments
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="departments-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="departments-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="departments.html">Department List</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="add-department.html">Add Department</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="services.html"">Services Offered</a>
+                            </div>
+                        </div>
+
+                        <!-- Inventory Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="inventory-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-package mr-2 h-4 w-4"><path d="M11 21.73a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73z"></path><path d="M12 22V12"></path><path d="m3.3 7 7.703 4.734a2 2 0 0 0 1.994 0L20.7 7"></path><path d="m7.5 4.27 9 5.15"></path></svg>
+                                    Inventory
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="inventory-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="inventory-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="inventory.html">Inventory List</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="add-inventory.html">Add Item</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="stock-alerts.html">Stock Alerts</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="suppliers.html">Suppliers List</a>
+                            </div>
+                        </div>
+
+                        <!-- Staff Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="staff-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-cog mr-2 h-4 w-4"><circle cx="18" cy="15" r="3"></circle><circle cx="9" cy="7" r="4"></circle><path d="M10 15H6a4 4 0 0 0-4 4v2"></path><path d="m21.7 16.4-.9-.3"></path><path d="m15.2 13.9-.9-.3"></path><path d="m16.6 18.7.3-.9"></path><path d="m19.1 12.2.3-.9"></path><path d="m19.6 18.7-.4-1"></path><path d="m16.8 12.3-.4-1"></path><path d="m14.3 16.6 1-.4"></path><path d="m20.7 13.8 1-.4"></path></svg>
+                                    Staff
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="staff-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="staff-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="staff-management.html">All Staff</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="add-staff.html">Add Staff</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="roles-permissions.html">Roles &amp; Permissions</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="staff-attendance.html">Attendance</a>
+                            </div>
+                        </div>
+
+                        <!-- Records Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="records-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-file-text mr-2 h-4 w-4"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"></path><path d="M14 2v4a2 2 0 0 0 2 2h4"></path><path d="M10 9H8"></path><path d="M16 13H8"></path><path d="M16 17H8"></path></svg>
+                                    Records
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="records-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="records-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="birth-records.html">Birth Records</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="death-records.html">Death Records</a>
+                            </div>
+                        </div>
+
+                        <!-- Room Allotment Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="rooms-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bed mr-2 h-4 w-4"><path d="M2 4v16"></path><path d="M2 8h18a2 2 0 0 1 2 2v10"></path><path d="M2 17h20"></path><path d="M6 8v9"></path></svg>
+                                    Room Allotment
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="rooms-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="rooms-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="rooms-alloted.html">Alloted Rooms</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="rooms-by-department.html">Rooms by Department</a>
+                            </div>
+                        </div>
+
+                        <!-- Reviews Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="reviews-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-star mr-2 h-4 w-4"><path d="M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z"></path></svg>
+                                    Reviews
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="reviews-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="reviews-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="doctor-review.html">Doctor Reviews</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="patient-review.html">Patient Reviews</a>
+                            </div>
+                        </div>
+
+                        <!-- Feedback (single link) -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="feedback.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square mr-2 h-4 w-4"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                                Feedback
+                            </a>
+                        </div>
+
+                        <!-- Reports Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="reports-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-chart-column mr-2 h-4 w-4"><path d="M3 3v16a2 2 0 0 0 2 2h16"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
+                                    Reports
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="reports-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="reports-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="reports.html">Overview</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="appointment-reports.html">Appointment Reports</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="financial-reports.html">Financial Reports</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="inventory-report.html">Inventory Reports</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="patient-visit-report.html">Patient Visit Reports</a>
+                            </div>
+                        </div>
+
+                        <!-- Settings Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="settings-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-settings mr-2 h-4 w-4"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                    Settings
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="settings-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="settings-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="settings.html">General Settings</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="settings-notifications.html">Notifications</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="hours.html">Working Hours</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="integrations.html">Integrations</a>
+                            </div>
+                        </div>
+
+                        <!-- Authentication Accordion -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <button class="auth-toggle flex w-full items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900">
+                                <div class="flex items-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check mr-2 h-4 w-4"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"></path><path d="m9 12 2 2 4-4"></path></svg>
+                                    Authentication
+                                </div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="auth-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
+                            <div class="auth-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="login.html">Login</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="register.html">Register</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="forgot-password.html">Forgot Password</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="profile-setting.html">Profile Settings</a>
+                            </div>
+                        </div>
+
+                        <!-- Calendar (single link) -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="calendar.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-calendar1 mr-2 h-4 w-4"><path d="M11 14h1v4"></path><path d="M16 2v4"></path><path d="M3 10h18"></path><path d="M8 2v4"></path><rect x="3" y="4" width="18" height="18" rx="2"></rect></svg>
+                                Calendar
+                            </a>
+                        </div>
+
+                        <!-- Tasks (single link) -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="task.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-check mr-2 h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="m9 12 2 2 4-4"></path></svg>
+                                Tasks
+                            </a>
+                        </div>
+
+                        <!-- Contacts (single link) -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="contacts.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user-round mr-2 h-4 w-4"><circle cx="12" cy="8" r="5"></circle><path d="M20 21a8 8 0 0 0-16 0"></path></svg>
+                                Contacts
+                            </a>
+                        </div>
+
+                        <!-- Email (single link) -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="email.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail mr-2 h-4 w-4"><rect width="20" height="16" x="2" y="4" rx="2"></rect><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path></svg>
+                                Email
+                            </a>
+                        </div>
+
+                        <!-- Chat (single link) -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="chat.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle mr-2 h-4 w-4"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"></path></svg>
+                                Chat
+                            </a>
+                        </div>
+
+                        <!-- Support (single link) -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="support.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-circle-help mr-2 h-4 w-4"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><path d="M12 17h.01"></path></svg>
+                                Support
+                            </a>
+                        </div>
+
+                        <!-- Widgets (single link) -->
+                        <div class="space-y-1 custom-scrollbar">
+                            <a class="flex items-center rounded-md px-3 py-2 text-sm font-medium transition-colors text-gray-700 hover:bg-gray-100 hover:text-gray-900" href="widgets.html">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-grid3x3 mr-2 h-4 w-4"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M3 9h18"></path><path d="M3 15h18"></path><path d="M9 3v18"></path><path d="M15 3v18"></path></svg>
+                                Widgets
+                            </a>
+                        </div>
+                    </nav>
+                </div>
+                <div class="border-t border-gray-200 p-4 shrink-0">
+                    <div class="flex items-center gap-3">
+<span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full"><img class="aspect-square h-full w-full object-cover" src="user.png" alt="User profile photo"></span>
+                        <div class="space-y-0.5">
+                            <p class="text-sm font-medium text-gray-800">Dr. Nakato Sarah</p>
+                            <p class="text-xs text-gray-500">Administrator</p>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-auto duration-300 p-4 xl:p-6 xl:ml-64 w-full">
+            <div class="flex flex-col gap-5">
+                <!-- Back and Title -->
+                <div class="flex items-center flex-wrap gap-4">
+                    <a class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-background  size-10 bg-background hover:bg-accent hover:text-accent-foreground h-10" href="patients.html">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4"><path d="m12 19-7-7 7-7"></path><path d="M19 12H5"></path></svg>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl lg:text-3xl font-bold tracking-tight mb-2 text-gray-900">Add Patient</h1>
+                        <p class="text-gray-500">Register a new patient in your clinic.</p>
+                    </div>
+                </div>
+
+                <!-- Radix-style Tabs Container -->
+                <div dir="ltr" data-orientation="horizontal" class="space-y-4">
+                    <!-- Tab List -->
+                    <div role="tablist" aria-orientation="horizontal" class="inline-flex flex-wrap items-center rounded-md bg-muted p-1 text-gray-500">
+                        <button type="button" role="tab" aria-selected="true" aria-controls="tab-content-personal" data-state="active" id="tab-trigger-personal" class="tab-trigger inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-white">
+                            Personal Information
+                        </button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="tab-content-medical" data-state="inactive" id="tab-trigger-medical" class="tab-trigger inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-white">
+                            Medical Information
+                        </button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="tab-content-insurance" data-state="inactive" id="tab-trigger-insurance" class="tab-trigger inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-white">
+                            Insurance & Billing
+                        </button>
+                        <button type="button" role="tab" aria-selected="false" aria-controls="tab-content-consent" data-state="inactive" id="tab-trigger-consent" class="tab-trigger inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-gray-900 data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-900 dark:data-[state=active]:text-white">
+                            Consent & Documents
+                        </button>
+                    </div>
+
+                    <!-- Tab Panels -->
+                    
+                    <!-- Personal Information Panel -->
+                    <div data-state="active" data-orientation="horizontal" role="tabpanel" aria-labelledby="tab-trigger-personal" id="tab-content-personal" class="tab-panel mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 space-y-4">
+                        <div class="rounded-lg border border-gray-200 bg-background shadow-sm">
+                            <div class="flex flex-col space-y-1.5 p-3 md:p-4 xxl:p-6 border-b border-gray-100">
+                                <h2 class="text-xl xl:text-2xl font-semibold leading-tight tracking-tight text-gray-900">Personal Information</h2>
+                                <div class="text-gray-500">Enter the patient's personal details.</div>
+                            </div>
+                            <div class="p-4 md:p-4 xxl:p-6 space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="space-y-2"><label class="text-sm font-medium text-gray-700">First Name <span class="text-red-500">*</span></label><input type="text" id="firstName" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900" placeholder="Enter first name"></div>
+                                    <div class="space-y-2"><label class="text-sm font-medium text-gray-700">Middle Name</label><input type="text" id="middleName" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900" placeholder="Enter middle name"></div>
+                                    <div class="space-y-2"><label class="text-sm font-medium text-gray-700">Last Name <span class="text-red-500">*</span></label><input type="text" id="lastName" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900" placeholder="Enter last name"></div>
+                                </div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div class="space-y-2"><label class="text-sm font-medium text-gray-700">Date of Birth</label><input type="date" id="dob" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div>
+                                    <div class="space-y-2 relative"><label class="text-sm font-medium text-gray-700">Gender</label><button type="button" id="genderBtn" class="w-full flex justify-between items-center rounded-md border border-gray-300 bg-background px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"><span id="genderSelected">Select gender</span><svg class="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></button><div id="genderDropdown" class="hidden dropdown-content w-full"><div class="py-1"><div class="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer" data-gender="Male">Male</div><div class="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer" data-gender="Female">Female</div><div class="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer" data-gender="Other">Other</div></div></div></div>
+                                    <div class="space-y-2 relative"><label class="text-sm font-medium text-gray-700">Marital Status</label><button type="button" id="maritalBtn" class="w-full flex justify-between items-center rounded-md border border-gray-300 bg-background px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"><span id="maritalSelected">Select status</span><svg class="h-4 w-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"></path></svg></button><div id="maritalDropdown" class="hidden dropdown-content w-full"><div class="py-1"><div class="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer" data-marital="Single">Single</div><div class="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer" data-marital="Married">Married</div><div class="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer" data-marital="Divorced">Divorced</div><div class="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer" data-marital="Widowed">Widowed</div></div></div></div>
+                                </div>
+                                <div class="space-y-2"><label class="text-sm font-medium text-gray-700">Address</label><textarea id="address" rows="2" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900" placeholder="Enter address"></textarea></div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="text-sm font-medium text-gray-700">City</label><input type="text" id="city" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div><div><label class="text-sm font-medium text-gray-700">State</label><input type="text" id="state" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div><div><label class="text-sm font-medium text-gray-700">Zip Code</label><input type="text" id="zip" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div></div>
+                                <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+                                <div><h3 class="text-lg font-medium text-gray-900">Contact Information</h3></div>
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4"><div><label class="text-sm font-medium text-gray-700">Email</label><input type="email.html" id="email.html" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div><div><label class="text-sm font-medium text-gray-700">Phone Number <span class="text-red-500">*</span></label><input type="tel" id="phone" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div><div><label class="text-sm font-medium text-gray-700">Alternative Phone</label><input type="tel" id="altPhone" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div></div>
+                                <div class="space-y-2"><label class="text-sm font-medium text-gray-700">Preferred Contact Method</label><div class="flex gap-4 text-gray-700"><label class="flex items-center gap-2"><input type="radio" name="contactMethod" value="phone" checked> <span>Phone</span></label><label class="flex items-center gap-2"><input type="radio" name="contactMethod" value="email.html"> <span>Email</span></label><label class="flex items-center gap-2"><input type="radio" name="contactMethod" value="sms"> <span>SMS</span></label></div></div>
+                                <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+                                <div><h3 class="text-lg font-medium text-gray-900">Emergency Contact</h3></div>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label class="text-sm font-medium text-gray-700">Contact Name</label><input type="text" id="emergencyName" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div><div><label class="text-sm font-medium text-gray-700">Relationship</label><input type="text" id="emergencyRelation" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div><div><label class="text-sm font-medium text-gray-700">Phone Number</label><input type="tel" id="emergencyPhone" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div><div><label class="text-sm font-medium text-gray-700">Email</label><input type="email.html" id="emergencyEmail" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background text-gray-900"></div></div>
+                                <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+                                <div><h3 class="text-lg font-medium text-gray-900">Profile Photo</h3><div class="flex items-center gap-4 mt-2"><div id="photoPreview" class="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden border border-gray-200"><svg class="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg></div><div><input type="file" id="profilePhotoInput" accept="image/*" class="hidden"><button type="button" id="uploadPhotoBtn" class="rounded-md border border-gray-300 bg-background  hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 text-sm font-medium text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500">Upload Photo</button><p class="text-xs text-gray-500 mt-1">JPG, PNG up to 2MB</p></div></div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Medical Information Panel -->
+                    <div data-state="inactive" data-orientation="horizontal" role="tabpanel" aria-labelledby="tab-trigger-medical" id="tab-content-medical" class="tab-panel hidden mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 space-y-4">
+                        <div class="rounded-lg border border-gray-200 bg-background shadow-sm">
+                            <div class="flex flex-col space-y-1.5 p-3 md:p-4 xxl:p-6 border-b border-gray-100">
+                                <h2 class="text-xl xl:text-2xl font-semibold leading-tight mb-2 tracking-tight text-gray-900">Medical Information</h2>
+                                <div class="text-gray-500">Enter the patient's medical history and details.</div>
+                            </div>
+                            <div class="p-4 md:p-4 xxl:p-6 space-y-6">
+                                <div class="space-y-4">
+                                    <div class="flex flex-col md:flex-row gap-4">
+                                        <div class="flex-1 space-y-2 relative custom-dropdown-container">
+                                            <label class="text-sm font-medium text-gray-700">Blood Type</label>
+                                            <button type="button" role="combobox" aria-expanded="false" class="dropdown-trigger flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500  hover:bg-accent hover:text-accent-foreground h-10  text-gray-900">
+                                                <span class="selected-text pointer-events-none line-clamp-1">Select blood type</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50 pointer-events-none"><path d="m6 9 6 6 6-6"></path></svg>
+                                            </button>
+                                            <div class="dropdown-menu hidden absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-background py-1 text-sm shadow-md dropdown-content">
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="O+"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span> O+</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="O-"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span> O-</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="A+"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span> A+</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="A-"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span> A-</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="B+"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span> B+</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="B-"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span> B-</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="AB+"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span> AB+</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="AB-"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg></span> AB-</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Height (cm)</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter height" type="number">
+                                        </div>
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Weight (kg)</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter weight" type="number">
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-700">Allergies</label>
+                                        <textarea class="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="List any allergies (medications, food, etc.)"></textarea>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-700">Current Medications</label>
+                                        <textarea class="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="List any current medications"></textarea>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-700">Chronic Conditions</label>
+                                        <textarea class="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="List any chronic conditions"></textarea>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-medium text-gray-900">Medical History</h3>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-700">Past Surgeries</label>
+                                        <textarea class="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="List any past surgeries with dates"></textarea>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-700">Previous Hospitalizations</label>
+                                        <textarea class="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="List any previous hospitalizations with dates"></textarea>
+                                    </div>
+                                    <div class="space-y-2">
+                                        <label class="text-sm font-medium text-gray-700 mb-2 block">Family Medical History</label>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Diabetes</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Heart Disease</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Hypertension</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Cancer</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Asthma</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Mental Health Conditions</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2 mt-4">
+                                        <label class="text-sm font-medium text-gray-700">Additional Family History Notes</label>
+                                        <textarea class="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter any additional family medical history"></textarea>
+                                    </div>
+                                </div>
+                                <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-medium text-gray-900">Lifestyle Information</h3>
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                        <div class="space-y-2 relative custom-dropdown-container">
+                                            <label class="text-sm font-medium text-gray-700">Smoking Status</label>
+                                            <button type="button" role="combobox" aria-expanded="false" class="dropdown-trigger flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500  hover:bg-accent hover:text-accent-foreground h-10  text-gray-900">
+                                                <span class="selected-text pointer-events-none line-clamp-1">Select status</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50 pointer-events-none"><path d="m6 9 6 6 6-6"></path></svg>
+                                            </button>
+                                            <div class="dropdown-menu hidden absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-background py-1 text-sm shadow-md dropdown-content">
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Never Smoked"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Never Smoked</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Former Smoker"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Former Smoker</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Current Smoker"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Current Smoker</div>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2 relative custom-dropdown-container">
+                                            <label class="text-sm font-medium text-gray-700">Alcohol Consumption</label>
+                                            <button type="button" role="combobox" aria-expanded="false" class="dropdown-trigger flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500  hover:bg-accent hover:text-accent-foreground h-10  text-gray-900">
+                                                <span class="selected-text pointer-events-none line-clamp-1">Select consumption</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50 pointer-events-none"><path d="m6 9 6 6 6-6"></path></svg>
+                                            </button>
+                                            <div class="dropdown-menu hidden absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-background py-1 text-sm shadow-md dropdown-content">
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="None"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> None</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Occasional"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Occasional</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Moderate"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Moderate</div>
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2 relative custom-dropdown-container">
+                                            <label class="text-sm font-medium text-gray-700">Exercise Frequency</label>
+                                            <button type="button" role="combobox" aria-expanded="false" class="dropdown-trigger flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500  hover:bg-accent hover:text-accent-foreground h-10  text-gray-900">
+                                                <span class="selected-text pointer-events-none line-clamp-1">Select frequency</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50 pointer-events-none"><path d="m6 9 6 6 6-6"></path></svg>
+                                            </button>
+                                            <div class="dropdown-menu hidden absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-background py-1 text-sm shadow-md dropdown-content">
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="None"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> None</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="1-2 times/week"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> 1-2 times/week</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="3+ times/week"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> 3+ times/week</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2 mt-4">
+                                        <label class="text-sm font-medium text-gray-700">Dietary Habits</label>
+                                        <textarea class="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Describe dietary habits"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Insurance & Billing Panel -->
+                    <div data-state="inactive" data-orientation="horizontal" role="tabpanel" aria-labelledby="tab-trigger-insurance" id="tab-content-insurance" class="tab-panel hidden mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 space-y-4">
+                        <div class="rounded-lg border border-gray-200 bg-background shadow-sm">
+                            <div class="flex flex-col space-y-1.5 p-3 md:p-4 xxl:p-6 border-b border-gray-100">
+                                <h2 class="text-xl xl:text-2xl font-semibold leading-tight mb-2 tracking-tight text-gray-900">Insurance & Billing Information</h2>
+                                <div class="text-gray-500">Enter the patient's insurance and payment details.</div>
+                            </div>
+                            <div class="p-4 md:p-4 xxl:p-6 space-y-6">
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-medium text-gray-900">Primary Insurance</h3>
+                                    <div class="flex flex-col md:flex-row gap-4">
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Insurance Provider</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter insurance provider">
+                                        </div>
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Policy Number</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter policy number">
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col md:flex-row gap-4">
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Group Number</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter group number">
+                                        </div>
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Policy Holder Name</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter policy holder name">
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-col md:flex-row gap-4">
+                                        <div class="flex-1 space-y-2 relative custom-dropdown-container">
+                                            <label class="text-sm font-medium text-gray-700">Relationship to Patient</label>
+                                            <button type="button" role="combobox" aria-expanded="false" class="dropdown-trigger flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500  hover:bg-accent hover:text-accent-foreground h-10  text-gray-900">
+                                                <span class="selected-text pointer-events-none line-clamp-1">Select relationship</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50 pointer-events-none"><path d="m6 9 6 6 6-6"></path></svg>
+                                            </button>
+                                            <div class="dropdown-menu hidden absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-background py-1 text-sm shadow-md dropdown-content">
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Self"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Self</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Spouse"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Spouse</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Child"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Child</div>
+                                                <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Parent"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Parent</div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Insurance Phone Number</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter insurance phone number">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+                                
+                                <div class="space-y-4">
+                                    <div class="flex items-center justify-between">
+                                        <h3 class="text-lg font-medium text-gray-900">Secondary Insurance</h3>
+                                        <button type="button" role="switch" aria-checked="false" data-state="unchecked" class="peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 bg-gray-300" id="has-secondary">
+                                            <span data-state="unchecked" class="switch-thumb pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform translate-x-0"></span>
+                                        </button>
+                                    </div>
+                                    <div id="secondaryFields" class="flex flex-col md:flex-row gap-4 hidden">
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Insurance Provider</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter insurance provider">
+                                        </div>
+                                        <div class="flex-1 space-y-2">
+                                            <label class="text-sm font-medium text-gray-700">Policy Number</label>
+                                            <input class="flex h-10 w-full rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900" placeholder="Enter policy number">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+                                
+                                <div class="space-y-4">
+                                    <h3 class="text-lg font-medium text-gray-900">Billing Preferences</h3>
+                                    <div class="space-y-2 relative custom-dropdown-container">
+                                        <label class="text-sm font-medium text-gray-700">Preferred Billing Method</label>
+                                        <button type="button" role="combobox" aria-expanded="false" class="dropdown-trigger flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500  hover:bg-accent hover:text-accent-foreground h-10  text-gray-900">
+                                            <span class="selected-text pointer-events-none line-clamp-1">Select method</span>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50 pointer-events-none"><path d="m6 9 6 6 6-6"></path></svg>
+                                        </button>
+                                        <div class="dropdown-menu hidden absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-background py-1 text-sm shadow-md dropdown-content">
+                                            <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Insurance"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Insurance</div>
+                                            <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Self-Pay"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Self-Pay</div>
+                                            <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Third Party"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Third Party</div>
+                                        </div>
+                                    </div>
+                                    <div class="space-y-2 mt-4">
+                                        <label class="text-sm font-medium text-gray-700 block mb-2">Payment Methods</label>
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <!-- Custom Checkboxes -->
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Credit Card</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Debit Card</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Cash</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Check</label>
+                                            </div>
+                                            <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                                                <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                                </button>
+                                                <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Online Payment</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Consent Panel -->
+<!-- Consent Panel -->
+<div data-state="inactive" data-orientation="horizontal" role="tabpanel" aria-labelledby="tab-trigger-consent" id="tab-content-consent" class="tab-panel hidden mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 space-y-4">
+    <div class="rounded-lg border border-gray-200 bg-background shadow-sm">
+        <div class="flex flex-col space-y-1.5 p-4 border-b border-gray-100">
+            <h2 class="text-xl font-semibold leading-tight tracking-tight text-gray-900">Consent & Documents</h2>
+            <div class="text-gray-500">Manage patient consent forms and documents.</div>
+        </div>
+        <div class="p-4 space-y-6">
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">Required Consent Forms</h3>
+                <div class="space-y-4">
+                    <!-- Data Protection (DPPA) Consent -->
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-md flex-wrap gap-3 file-upload-wrapper transition-colors">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Data Protection Consent (DPPA Uganda 2019)</h4>
+                            <p class="text-sm text-gray-500 file-name-display transition-colors">Patient consent for use and disclosure of health information</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="file-success-icon hidden text-green-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                            </span>
+                            <input type="file" class="hidden file-input" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="upload-trigger-btn inline-flex items-center justify-center shrink-0 gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-gray-300 bg-background  hover:bg-accent hover:text-accent-foreground h-10 text-gray-800 h-10 px-4 py-2 focus-visible:ring-2 focus-visible:ring-indigo-500">Upload</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Treatment Consent -->
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-md flex-wrap gap-3 file-upload-wrapper transition-colors">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Treatment Consent</h4>
+                            <p class="text-sm text-gray-500 file-name-display transition-colors">Consent to receive medical treatment</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="file-success-icon hidden text-green-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                            </span>
+                            <input type="file" class="hidden file-input" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="upload-trigger-btn inline-flex items-center justify-center shrink-0 gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-gray-300 bg-background  hover:bg-accent hover:text-accent-foreground h-10 text-gray-800 h-10 px-4 py-2 focus-visible:ring-2 focus-visible:ring-indigo-500">Upload</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Financial Agreement -->
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-md flex-wrap gap-3 file-upload-wrapper transition-colors">
+                        <div>
+                            <h4 class="font-medium text-gray-900">Financial Agreement</h4>
+                            <p class="text-sm text-gray-500 file-name-display transition-colors">Agreement to pay for services</p>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="file-success-icon hidden text-green-500">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"></path></svg>
+                            </span>
+                            <input type="file" class="hidden file-input" accept=".pdf,.jpg,.jpeg,.png">
+                            <button type="button" class="upload-trigger-btn inline-flex items-center justify-center shrink-0 gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-gray-300 bg-background  hover:bg-accent hover:text-accent-foreground h-10 text-gray-800 h-10 px-4 py-2 focus-visible:ring-2 focus-visible:ring-indigo-500">Upload</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+            
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">Additional Documents</h3>
+                <div class="space-y-2 relative custom-dropdown-container">
+                    <label class="text-sm font-medium text-gray-700">Document Type</label>
+                    <button type="button" role="combobox" aria-expanded="false" class="dropdown-trigger flex h-10 w-full items-center justify-between rounded-md border border-gray-300 bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500  hover:bg-accent hover:text-accent-foreground h-10  text-gray-900">
+                        <span class="selected-text pointer-events-none line-clamp-1">Select document type</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 opacity-50 pointer-events-none"><path d="m6 9 6 6 6-6"></path></svg>
+                    </button>
+                    <div class="dropdown-menu hidden absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded-md border border-gray-200 bg-background py-1 text-sm shadow-md dropdown-content">
+                        <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="ID Card"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> ID Card</div>
+                        <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Previous Records"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Previous Records</div>
+                        <div class="dropdown-item relative flex w-full cursor-pointer select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm hover:bg-gray-100 text-gray-900" data-value="Lab Results"><span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center check-icon hidden"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M20 6 9 17l-5-5"></path></svg></span> Lab Results</div>
+                    </div>
+                </div>
+                
+                <!-- Additional Documents Upload Wrapper -->
+                <div class="flex flex-col gap-3 mt-2 file-upload-wrapper">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <input type="file" class="hidden file-input" accept=".pdf,.jpg,.jpeg,.png">
+                        <button type="button" class="upload-trigger-btn inline-flex items-center justify-center shrink-0 gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-gray-300 bg-background  hover:bg-accent hover:text-accent-foreground h-10 text-gray-800 h-10 px-4 py-2 focus-visible:ring-2 focus-visible:ring-indigo-500">Upload Document</button>
+                        <p class="text-sm text-gray-500 default-helper-text transition-colors">Upload additional patient documents. PDF, JPG, or PNG. Max 10MB.</p>
+                    </div>
+                    <!-- Success Banner -->
+                    <div class="file-success-display hidden flex items-center gap-2 text-sm text-indigo-700 bg-indigo-50 px-3 py-2.5 rounded-md border border-indigo-100 w-fit">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                        <span class="file-name-text font-medium truncate max-w-[250px] md:max-w-md"></span>
+                        <button type="button" class="ml-2 text-indigo-400 hover:text-red-500 remove-file-btn transition-colors" title="Remove file">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+            
+            <div class="space-y-4">
+                <h3 class="text-lg font-medium text-gray-900">Communication Preferences</h3>
+                <div class="space-y-4">
+                    <!-- Checkboxes... (No changes to this block) -->
+                    <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                        <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </button>
+                        <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Receive appointment reminders</label>
+                    </div>
+                    <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                        <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </button>
+                        <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Receive lab result notifications</label>
+                    </div>
+                    <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                        <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </button>
+                        <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Receive prescription notifications</label>
+                    </div>
+                    <div class="flex items-center space-x-2 custom-checkbox-wrapper">
+                        <button type="button" role="checkbox" aria-checked="false" data-state="unchecked" class="custom-checkbox h-4 w-4 shrink-0 rounded-sm border border-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 data-[state=checked]:bg-primary data-[state=checked]:border-indigo-600 data-[state=checked]:text-white flex items-center justify-center transition-colors bg-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3 hidden check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        </button>
+                        <label class="text-sm font-medium text-gray-700 cursor-pointer select-none">Receive clinic newsletter and updates</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex justify-end gap-4 mt-2">
+                    <button type="button" id="cancelBtn" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-background px-5 py-2 text-sm font-medium text-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-background hover:bg-accent hover:text-accent-foreground h-10">Cancel</button>
+                    <button type="button" id="registerBtn" class="inline-flex items-center justify-center rounded-md bg-primary text-white hover:bg-primary/90 px-6 py-2 text-sm font-medium shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Register Patient</button>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+
+
+
+
+
+
+<!-- 1. Settings Manager (MUST be first) -->
+<script src="js/features/settings-manager.js"></script>
+
+<!-- 2. Core UI -->
+<script src="js/core/theme.js"></script>
+<script src="js/core/sidebar.js"></script>
+<script src="js/core/accordion.js"></script>
+<script src="js/core/notifications.js"></script>
+<script src="js/core/profile.js"></script>
+
+<!-- 3. Features -->
+<script src="js/features/currency.js"></script>
+<script src="js/features/tabs.js"></script>   
+<script src="js/features/pip-widget.js"></script>
+<script src="js/features/regional.js"></script>
+<script src="js/features/language.js"></script>
+
+<!-- 4. Main Init (last) -->
+<script src="js/init.js"></script>
+
+
+
+<script>
+
+// ==================== TAB SWITCHING ====================
+const triggers = document.querySelectorAll('.tab-trigger, .tab-btn');
+const panels = {
+    personal: document.getElementById('tab-content-personal'),
+    medical: document.getElementById('tab-content-medical'),
+    insurance: document.getElementById('tab-content-insurance'),
+    consent: document.getElementById('tab-content-consent')
+};
+
+function switchTab(tabId) {
+    Object.values(panels).forEach(panel => {
+        if (panel) {
+            panel.classList.add('hidden');
+            panel.setAttribute('data-state', 'inactive');
+        }
+    });
+
+    const activePanel = panels[tabId];
+    if (activePanel) {
+        activePanel.classList.remove('hidden');
+        activePanel.setAttribute('data-state', 'active');
+    }
+
+    triggers.forEach(trigger => {
+        trigger.setAttribute('aria-selected', 'false');
+        trigger.setAttribute('data-state', 'inactive');
+
+        if (trigger.classList.contains('tab-trigger')) {
+            trigger.classList.remove('bg-white', 'text-gray-900', 'shadow-sm', 'dark:bg-gray-900', 'dark:text-white');
+        } else if (trigger.classList.contains('tab-btn')) {
+            trigger.classList.remove('bg-white', 'text-gray-900', 'shadow-sm');
+            trigger.classList.add('hover:text-gray-900', 'hover:bg-gray-200');
+        }
+
+        const triggerTarget = trigger.getAttribute('data-target') ? trigger.getAttribute('data-target').replace('content-', '') : trigger.id.replace('tab-trigger-', '');
+
+        if (triggerTarget === tabId) {
+            trigger.setAttribute('aria-selected', 'true');
+            trigger.setAttribute('data-state', 'active');
+
+            if (trigger.classList.contains('tab-trigger')) {
+                trigger.classList.add('bg-white', 'text-gray-900', 'shadow-sm', 'dark:bg-gray-900', 'dark:text-white');
+            } else if (trigger.classList.contains('tab-btn')) {
+                trigger.classList.add('bg-white', 'text-gray-900', 'shadow-sm');
+                trigger.classList.remove('hover:text-gray-900', 'hover:bg-gray-200');
+            }
+        }
+    });
+}
+
+triggers.forEach(trigger => {
+    trigger.addEventListener('click', () => {
+        const targetId = trigger.getAttribute('data-target') ? trigger.getAttribute('data-target').replace('content-', '') : trigger.id.replace('tab-trigger-', '');
+        switchTab(targetId);
+    });
+});
+
+// ==================== DROPDOWNS ====================
+function setupDropdown(btnId, dropdownId, spanId, attrName) {
+    const btn = document.getElementById(btnId);
+    const dropdown = document.getElementById(dropdownId);
+    const span = document.getElementById(spanId);
+    if (!btn) return;
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.dropdown-content').forEach(d => { if (d !== dropdown) d.classList.add('hidden') });
+        dropdown.classList.toggle('hidden');
+    });
+    dropdown.querySelectorAll(`[data-${attrName}]`).forEach(el => {
+        el.addEventListener('click', () => {
+            span.textContent = el.getAttribute(`data-${attrName}`);
+            dropdown.classList.add('hidden');
+        });
+    });
+}
+
+setupDropdown('genderBtn', 'genderDropdown', 'genderSelected', 'gender');
+setupDropdown('maritalBtn', 'maritalDropdown', 'maritalSelected', 'marital');
+
+// Radix-style Dropdowns
+document.querySelectorAll('.custom-dropdown-container').forEach(container => {
+    const trigger = container.querySelector('.dropdown-trigger');
+    const menu = container.querySelector('.dropdown-menu');
+    const selectedText = container.querySelector('.selected-text');
+    const items = container.querySelectorAll('.dropdown-item');
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+
+        document.querySelectorAll('.dropdown-content').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.dropdown-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+
+        if (!isExpanded) {
+            menu.classList.remove('hidden');
+            trigger.setAttribute('aria-expanded', 'true');
+        }
+    });
+
+    items.forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedText.textContent = item.getAttribute('data-value');
+
+            items.forEach(i => {
+                i.setAttribute('data-selected', 'false');
+                i.querySelector('.check-icon').classList.add('hidden');
+            });
+
+            item.setAttribute('data-selected', 'true');
+            item.querySelector('.check-icon').classList.remove('hidden');
+
+            menu.classList.add('hidden');
+            trigger.setAttribute('aria-expanded', 'false');
+        });
+    });
+});
+
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-dropdown-container')) {
+        document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+        document.querySelectorAll('.dropdown-trigger').forEach(t => t.setAttribute('aria-expanded', 'false'));
+    }
+    if (!e.target.closest('#genderBtn') && !e.target.closest('#maritalBtn')) {
+        document.getElementById('genderDropdown')?.classList.add('hidden');
+        document.getElementById('maritalDropdown')?.classList.add('hidden');
+    }
+});
+
+// ==================== CHECKBOXES ====================
+document.querySelectorAll('.custom-checkbox-wrapper').forEach(wrapper => {
+    const btn = wrapper.querySelector('.custom-checkbox');
+    const label = wrapper.querySelector('label');
+    const icon = btn.querySelector('.check-icon');
+
+    const toggleCheck = (e) => {
+        e.stopPropagation();
+        const isChecked = btn.getAttribute('aria-checked') === 'true';
+
+        if (isChecked) {
+            btn.setAttribute('aria-checked', 'false');
+            btn.setAttribute('data-state', 'unchecked');
+            icon.classList.add('hidden');
+        } else {
+            btn.setAttribute('aria-checked', 'true');
+            btn.setAttribute('data-state', 'checked');
+            icon.classList.remove('hidden');
+        }
+    };
+
+    btn.addEventListener('click', toggleCheck);
+    if (label) label.addEventListener('click', toggleCheck);
+});
+
+// ==================== SECONDARY INSURANCE SWITCH ====================
+const secondarySwitch = document.getElementById('has-secondary');
+if (secondarySwitch) {
+    secondarySwitch.addEventListener('click', () => {
+        const isChecked = secondarySwitch.getAttribute('aria-checked') === 'true';
+        const thumb = secondarySwitch.querySelector('.switch-thumb');
+        const secondaryFields = document.getElementById('secondaryFields');
+
+        if (isChecked) {
+            secondarySwitch.setAttribute('aria-checked', 'false');
+            secondarySwitch.setAttribute('data-state', 'unchecked');
+            thumb.setAttribute('data-state', 'unchecked');
+            thumb.classList.remove('translate-x-5');
+            thumb.classList.add('translate-x-0');
+            secondarySwitch.classList.remove('bg-primary');
+            secondarySwitch.classList.add('bg-gray-300');
+            if (secondaryFields) secondaryFields.classList.add('hidden');
+        } else {
+            secondarySwitch.setAttribute('aria-checked', 'true');
+            secondarySwitch.setAttribute('data-state', 'checked');
+            thumb.setAttribute('data-state', 'checked');
+            thumb.classList.remove('translate-x-0');
+            thumb.classList.add('translate-x-5');
+            secondarySwitch.classList.remove('bg-gray-300');
+            secondarySwitch.classList.add('bg-primary');
+            if (secondaryFields) secondaryFields.classList.remove('hidden');
+        }
+    });
+}
+
+// ==================== PHOTO UPLOAD ====================
+const photoInput = document.getElementById('profilePhotoInput');
+const uploadBtn = document.getElementById('uploadPhotoBtn');
+const photoPreview = document.getElementById('photoPreview');
+if (uploadBtn) uploadBtn.addEventListener('click', () => photoInput.click());
+if (photoInput) {
+    photoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                photoPreview.innerHTML = `<img src="user.png" class="h-full w-full object-cover rounded-full" alt="User profile photo">`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// ==================== DOCUMENT UPLOADS ====================
+document.querySelectorAll('.file-upload-wrapper').forEach(wrapper => {
+    const fileInput = wrapper.querySelector('.file-input');
+    const uploadBtn = wrapper.querySelector('.upload-trigger-btn');
+    const fileNameDisplay = wrapper.querySelector('.file-name-display');
+    const successIcon = wrapper.querySelector('.file-success-icon');
+    const successDisplay = wrapper.querySelector('.file-success-display');
+    const fileNameText = wrapper.querySelector('.file-name-text');
+    const removeBtn = wrapper.querySelector('.remove-file-btn');
+    const helperText = wrapper.querySelector('.default-helper-text');
+
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', () => fileInput.click());
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                if (fileNameDisplay) {
+                    fileNameDisplay.textContent = `Uploaded: ${file.name}`;
+                    fileNameDisplay.classList.add('text-green-600', 'font-medium');
+                    fileNameDisplay.classList.remove('text-gray-500');
+                    wrapper.classList.add('bg-green-50/50', 'border-green-200');
+                    if (successIcon) successIcon.classList.remove('hidden');
+                    uploadBtn.textContent = 'Change File';
+                }
+
+                if (successDisplay) {
+                    successDisplay.classList.remove('hidden');
+                    if (fileNameText) fileNameText.textContent = file.name;
+                    if (helperText) helperText.classList.add('hidden');
+                    uploadBtn.textContent = 'Upload Another';
+                }
+            }
+        });
+    }
+
+    if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+            fileInput.value = '';
+            successDisplay.classList.add('hidden');
+            if (fileNameText) fileNameText.textContent = '';
+            if (helperText) helperText.classList.remove('hidden');
+            uploadBtn.textContent = 'Upload Document';
+        });
+    }
+});
+
+// ==================== HELPER FUNCTIONS ====================
+function generatePatientId() {
+    const timestamp = Date.now().toString().slice(-6);
+    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    return `P-${timestamp}${random}`;
+}
+
+function getPatientsFromStorage() {
+    const stored = localStorage.getItem('meditrack_patients');
+    return stored ? JSON.parse(stored) : [];
+}
+
+function savePatientsToStorage(patients) {
+    localStorage.setItem('meditrack_patients', JSON.stringify(patients));
+}
+
+function getSelectedCheckboxValues(containerSelector) {
+    const values = [];
+    const containers = document.querySelectorAll(containerSelector || '.custom-checkbox-wrapper');
+    containers.forEach(wrapper => {
+        const checkbox = wrapper.querySelector('.custom-checkbox');
+        if (checkbox && checkbox.getAttribute('aria-checked') === 'true') {
+            const label = wrapper.querySelector('label');
+            if (label) values.push(label.textContent.trim());
+        }
+    });
+    return values;
+}
+
+function getSelectedRadioValue(name) {
+    const radio = document.querySelector(`input[name="${name}"]:checked`);
+    return radio ? radio.value : '';
+}
+
+function getDropdownValue(containerIndex, defaultValue) {
+    const containers = document.querySelectorAll('.custom-dropdown-container');
+    if (containers[containerIndex]) {
+        const selectedText = containers[containerIndex].querySelector('.selected-text');
+        if (selectedText && selectedText.textContent && !selectedText.textContent.includes('Select')) {
+            return selectedText.textContent;
+        }
+    }
+    return defaultValue || '';
+}
+
+function getConsentFormStatus(formName) {
+    const consentSections = document.querySelectorAll('.file-upload-wrapper');
+    for (let section of consentSections) {
+        const heading = section.querySelector('h4');
+        if (heading && heading.textContent.includes(formName)) {
+            const fileNameDisplay = section.querySelector('.file-name-display');
+            if (fileNameDisplay && fileNameDisplay.textContent !== 'Patient consent for use and disclosure of health information' &&
+                fileNameDisplay.textContent !== 'Consent to receive medical treatment' &&
+                fileNameDisplay.textContent !== 'Agreement to pay for services') {
+                return { uploaded: true, fileName: fileNameDisplay.textContent.replace('Uploaded: ', '') };
+            }
+            return { uploaded: false, fileName: null };
+        }
+    }
+    return { uploaded: false, fileName: null };
+}
+
+
+
+// ==================== REGISTER PATIENT ====================
+const registerBtn = document.getElementById('registerBtn');
+const cancelBtn = document.getElementById('cancelBtn');
+
+if (registerBtn) {
+    registerBtn.addEventListener('click', () => {
+        const firstName = document.getElementById('firstName')?.value.trim();
+        const lastName = document.getElementById('lastName')?.value.trim();
+        const phone = document.getElementById('phone')?.value.trim();
+
+        if (!firstName || !lastName || !phone) {
+            alert('Please fill required fields: First Name, Last Name, Phone');
+            return;
+        }
+
+        // Get all insurance inputs
+        const insuranceInputs = document.querySelectorAll('#tab-content-insurance input');
+        const insuranceValues = [];
+        insuranceInputs.forEach(input => {
+            if (input.value) insuranceValues.push(input.value);
+        });
+
+        // Get blood type
+        let bloodType = '';
+        const bloodTypeContainer = document.querySelector('.custom-dropdown-container');
+        if (bloodTypeContainer) {
+            const btSelected = bloodTypeContainer.querySelector('.selected-text');
+            if (btSelected && btSelected.textContent !== 'Select blood type') {
+                bloodType = btSelected.textContent;
+            }
+        }
+
+        // Get smoking status
+        let smokingStatus = '';
+        const smokingContainers = document.querySelectorAll('.custom-dropdown-container');
+        if (smokingContainers[3]) {
+            const ssSelected = smokingContainers[3].querySelector('.selected-text');
+            if (ssSelected && ssSelected.textContent !== 'Select status') {
+                smokingStatus = ssSelected.textContent;
+            }
+        }
+
+        // Get alcohol consumption
+        let alcoholConsumption = '';
+        if (smokingContainers[4]) {
+            const acSelected = smokingContainers[4].querySelector('.selected-text');
+            if (acSelected && acSelected.textContent !== 'Select consumption') {
+                alcoholConsumption = acSelected.textContent;
+            }
+        }
+
+        // Get exercise frequency
+        let exerciseFrequency = '';
+        if (smokingContainers[5]) {
+            const efSelected = smokingContainers[5].querySelector('.selected-text');
+            if (efSelected && efSelected.textContent !== 'Select frequency') {
+                exerciseFrequency = efSelected.textContent;
+            }
+        }
+
+        // Get relationship
+        let relationship = '';
+        if (smokingContainers[6]) {
+            const relSelected = smokingContainers[6].querySelector('.selected-text');
+            if (relSelected && relSelected.textContent !== 'Select relationship') {
+                relationship = relSelected.textContent;
+            }
+        }
+
+        // Get billing method
+        let billingMethod = '';
+        if (smokingContainers[7]) {
+            const bmSelected = smokingContainers[7].querySelector('.selected-text');
+            if (bmSelected && bmSelected.textContent !== 'Select method') {
+                billingMethod = bmSelected.textContent;
+            }
+        }
+
+        const patientData = {
+            id: generatePatientId(),
+            name: `${firstName} ${lastName}`,
+            firstName: firstName,
+            middleName: document.getElementById('middleName')?.value.trim() || '',
+            lastName: lastName,
+            dateOfBirth: document.getElementById('dob')?.value || '',
+            gender: document.getElementById('genderSelected')?.textContent !== 'Select gender' ? document.getElementById('genderSelected')?.textContent : '',
+            maritalStatus: document.getElementById('maritalSelected')?.textContent !== 'Select status' ? document.getElementById('maritalSelected')?.textContent : '',
+            address: document.getElementById('address')?.value.trim() || '',
+            city: document.getElementById('city')?.value.trim() || '',
+            state: document.getElementById('state')?.value.trim() || '',
+            zipCode: document.getElementById('zip')?.value.trim() || '',
+            email: document.getElementById('email.html')?.value.trim() || '',
+            phone: phone,
+            alternatePhone: document.getElementById('altPhone')?.value.trim() || '',
+            preferredContact: getSelectedRadioValue('contactMethod'),
+            emergencyContact: {
+                name: document.getElementById('emergencyName')?.value.trim() || '',
+                relationship: document.getElementById('emergencyRelation')?.value.trim() || '',
+                phone: document.getElementById('emergencyPhone')?.value.trim() || '',
+                email: document.getElementById('emergencyEmail')?.value.trim() || ''
+            },
+            medicalInfo: {
+                bloodType: bloodType,
+                height: document.querySelector('input[placeholder="Enter height"]')?.value || '',
+                weight: document.querySelector('input[placeholder="Enter weight"]')?.value || '',
+                allergies: document.querySelector('textarea[placeholder*="allergies"]')?.value || '',
+                currentMedications: document.querySelector('textarea[placeholder*="current medications"]')?.value || '',
+                chronicConditions: document.querySelector('textarea[placeholder*="chronic conditions"]')?.value || '',
+                pastSurgeries: document.querySelector('textarea[placeholder*="past surgeries"]')?.value || '',
+                previousHospitalizations: document.querySelector('textarea[placeholder*="previous hospitalizations"]')?.value || '',
+                familyHistory: getSelectedCheckboxValues(),
+                additionalFamilyNotes: document.querySelector('textarea[placeholder*="Additional family history"]')?.value || '',
+                smokingStatus: smokingStatus,
+                alcoholConsumption: alcoholConsumption,
+                exerciseFrequency: exerciseFrequency,
+                dietaryHabits: document.querySelector('textarea[placeholder*="Describe dietary"]')?.value || ''
+            },
+            insurance: {
+                primary: {
+                    provider: document.querySelectorAll('#tab-content-insurance input[placeholder*="provider"]')[0]?.value || '',
+                    policyNumber: document.querySelectorAll('#tab-content-insurance input[placeholder*="policy"]')[0]?.value || '',
+                    groupNumber: document.querySelectorAll('#tab-content-insurance input[placeholder*="Group"]')[0]?.value || '',
+                    policyHolder: document.querySelectorAll('#tab-content-insurance input[placeholder*="holder"]')[0]?.value || '',
+                    relationship: relationship,
+                    phone: document.querySelector('#tab-content-insurance input[placeholder*="phone"]')?.value || ''
+                },
+                secondary: {
+                    hasInsurance: document.getElementById('has-secondary')?.getAttribute('aria-checked') === 'true',
+                    provider: document.querySelectorAll('#secondaryFields input[placeholder*="provider"]')[0]?.value || '',
+                    policyNumber: document.querySelectorAll('#secondaryFields input[placeholder*="policy"]')[0]?.value || ''
+                }
+            },
+            billing: {
+                preferredMethod: billingMethod,
+                paymentMethods: getSelectedCheckboxValues('.grid.grid-cols-1.md\\:grid-cols-2.gap-4')
+            },
+            consent: {
+                hipaa: getConsentFormStatus('Data Protection Consent (DPPA Uganda 2019)'),
+                treatment: getConsentFormStatus('Treatment Consent'),
+                financial: getConsentFormStatus('Financial Agreement'),
+                additionalDocuments: []
+            },
+            communication: {
+                appointmentReminders: document.querySelectorAll('.custom-checkbox-wrapper')[8]?.querySelector('.custom-checkbox')?.getAttribute('aria-checked') === 'true',
+                labResults: document.querySelectorAll('.custom-checkbox-wrapper')[9]?.querySelector('.custom-checkbox')?.getAttribute('aria-checked') === 'true',
+                prescriptionNotifications: document.querySelectorAll('.custom-checkbox-wrapper')[10]?.querySelector('.custom-checkbox')?.getAttribute('aria-checked') === 'true',
+                newsletter: document.querySelectorAll('.custom-checkbox-wrapper')[11]?.querySelector('.custom-checkbox')?.getAttribute('aria-checked') === 'true'
+            },
+            status: 'Active',
+            registrationDate: new Date().toISOString().split('T')[0],
+            lastVisit: new Date().toISOString().split('T')[0],
+            doctor: 'Dr. Nakato Sarah'
+        };
+
+        // Get additional document
+        const additionalDocWrapper = document.querySelector('.file-upload-wrapper:not(:has(h4))');
+        if (additionalDocWrapper) {
+            const fileNameDisplay = additionalDocWrapper.querySelector('.file-name-text');
+            const docTypeContainer = document.querySelectorAll('.custom-dropdown-container')[8];
+            if (fileNameDisplay && fileNameDisplay.textContent) {
+                patientData.consent.additionalDocuments.push({
+                    type: docTypeContainer ? docTypeContainer.querySelector('.selected-text')?.textContent || 'Other' : 'Other',
+                    fileName: fileNameDisplay.textContent,
+                    uploadedAt: new Date().toISOString()
+                });
+            }
+        }
+
+        // Save to localStorage
+        const existingPatients = getPatientsFromStorage();
+        existingPatients.push(patientData);
+        savePatientsToStorage(existingPatients);
+
+        // Calculate age from date of birth
+        let age = 0;
+        if (patientData.dateOfBirth) {
+            const birthDate = new Date(patientData.dateOfBirth);
+            const today = new Date();
+            age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
+        }
+
+        // Prepare for patients.html table
+        const newPatientForTable = {
+            id: existingPatients.length,
+            name: patientData.name,
+            age: age,
+            gender: patientData.gender,
+            status: patientData.status,
+            lastVisit: patientData.lastVisit,
+            condition: patientData.medicalInfo.chronicConditions?.split(',')[0] || 'General Checkup',
+            doctor: patientData.doctor
+        };
+
+        // Save to session storage for the patients page to pick up
+        sessionStorage.setItem('newlyAddedPatient', JSON.stringify(newPatientForTable));
+        sessionStorage.setItem('newPatientFullData', JSON.stringify(patientData));
+
+        // Show success and redirect
+        const originalHTML = registerBtn.innerHTML;
+        registerBtn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Registering...`;
+        registerBtn.disabled = true;
+
+        setTimeout(() => {
+            alert(`✅ Patient ${firstName} ${lastName} registered successfully!\n\nPatient ID: ${patientData.id}\n\nYou will be redirected to the patients list.`);
+            window.location.href = 'patients.html';
+        }, 600);
+    });
+}
+
+if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to cancel? Any unsaved data will be lost.')) {
+            window.location.href = 'patients.html';
+        }
+    });
+}
+</script>
+
+    
+    
+
+
+    <script src="js/meditrack-security.js"></script>
+    <script src="js/meditrack.js"></script>
+    <script src="js/meditrack-realtime.js"></script>
+    <script src="js/meditrack-language.js"></script>
+    <script src="js/meditrack-flags.js"></script>
+    <script src="js/meditrack-avatars.js"></script>
+    <script src="js/meditrack-nav-confirm.js"></script>
+    <script src="js/meditrack-store.js"></script>
+    <script src="js/meditrack-pagination.js"></script>
+    <script src="js/meditrack-search.js"></script>
+    <script src="js/meditrack-pdf.js"></script>
+    <script src="js/clinical-sync.js"></script>
+    <script src="js/meditrack-action-menu.js"></script>
+    <script src="js/meditrack-consent.js"></script>
+    <script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('service-worker.js').then(function(reg) {
+            console.log('[PWA] Service Worker registered:', reg.scope);
+        }).catch(function(err) {
+            console.warn('[PWA] Service Worker registration failed:', err);
+        });
+    });
+}
+</script>
+</body>
+</html>

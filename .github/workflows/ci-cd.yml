@@ -1,0 +1,318 @@
+name: CI/CD
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Deploy the update or inspect the release and refresh PHP cache
+        type: choice
+        default: deploy
+        options:
+          - deploy
+          - diagnose
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meditrack-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PHP_VERSION: '8.3'
+  APP_URL: https://hospital.alwaysdata.net
+
+jobs:
+  quality:
+    if: github.event.inputs.operation != 'diagnose'
+    name: Test and validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: bcmath, curl, fileinfo, gd, intl, mbstring, pdo_sqlite, sqlite3, zip, xml
+          coverage: none
+          tools: composer:v2
+
+      - name: Validate Composer configuration
+        run: composer validate --strict
+
+      - name: Install PHP dependencies
+        # The source lockfile currently contains Laravel 11 releases flagged by Composer advisories.
+        # --no-security-blocking works across Composer 2.4+ (the deploy target runs an older 2.x
+        # than the one this runner installs, and the newer --no-blocking alias isn't available there).
+        run: composer install --no-interaction --no-progress --prefer-dist --optimize-autoloader --no-security-blocking
+
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          sed -i \
+            -e 's/^DB_CONNECTION=.*/DB_CONNECTION=sqlite/' \
+            -e 's/^DB_DATABASE=.*/DB_DATABASE=:memory:/' \
+            -e 's/^CACHE_STORE=.*/CACHE_STORE=array/' \
+            -e 's/^SESSION_DRIVER=.*/SESSION_DRIVER=array/' \
+            -e 's/^QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' \
+            .env
+          php artisan key:generate --force
+          php artisan optimize:clear
+
+      - name: Validate Laravel production caches
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+          php artisan optimize:clear
+
+      - name: Validate route registration
+        run: php artisan route:list --except-vendor
+
+      - name: Check PHP syntax
+        run: find app config database routes tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run Laravel tests
+        run: php artisan test --without-tty
+
+      - name: Report dependency advisories
+        continue-on-error: true
+        run: composer audit --format=summary
+
+  deploy:
+    name: Deploy to Alwaysdata
+    needs: quality
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.operation != 'diagnose')
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install SSH password helper
+        run: sudo apt-get update && sudo apt-get install --yes sshpass
+
+      - name: Create production environment file
+        env:
+          APP_KEY: ${{ secrets.LARAVEL_APP_KEY }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        run: |
+          test -n "$APP_KEY"
+          test -n "$DB_HOST"
+          test -n "$DB_DATABASE"
+          test -n "$DB_USERNAME"
+          test -n "$DB_PASSWORD"
+          escape_dotenv() { printf '%s' "$1" | sed 's/[\\"]/\\&/g'; }
+          {
+            printf '%s\n' \
+              'APP_NAME="MediTrack HMS"' \
+              'APP_ENV=production' \
+              'APP_DEBUG=false' \
+              "APP_KEY=$APP_KEY" \
+              "APP_URL=${APP_URL}" \
+              "ASSET_URL=${APP_URL}" \
+              "FRONTEND_URL=${APP_URL}" \
+              'APP_TIMEZONE=Africa/Kampala' \
+              'DB_CONNECTION=mysql' \
+              'DB_PORT=3306' \
+              'CACHE_STORE=file' \
+              'SESSION_DRIVER=file' \
+              'QUEUE_CONNECTION=sync' \
+              'MAIL_MAILER=log' \
+              'ENABLE_SMS_NOTIFICATIONS=false' \
+              'ENABLE_MOBILE_MONEY=false' \
+              'ENABLE_INSURANCE_INTEGRATION=false' \
+              'ENABLE_ID_VERIFICATION=false' \
+              'ENABLE_LIS_INTEGRATION=false' \
+              'ENABLE_PHARMACY_SUPPLY_CHAIN=false' \
+              'ENABLE_AMBULANCE_GPS=false' \
+              'ENABLE_TWILIO_EMERGENCY=false'
+            printf 'DB_HOST="%s"\n' "$(escape_dotenv "$DB_HOST")"
+            printf 'DB_DATABASE="%s"\n' "$(escape_dotenv "$DB_DATABASE")"
+            printf 'DB_USERNAME="%s"\n' "$(escape_dotenv "$DB_USERNAME")"
+            printf 'DB_PASSWORD="%s"\n' "$(escape_dotenv "$DB_PASSWORD")"
+          } > /tmp/meditrack.env
+
+      - name: Free disk space on Alwaysdata before deploying
+        env:
+          SSHPASS: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
+          SSH_HOST: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+          SSH_USER: ${{ secrets.ALWAYSDATA_SSH_USER }}
+        run: |
+          test -n "$SSHPASS"
+          ssh_opts=(-4 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/tmp/meditrack-known-hosts)
+          sshpass -e ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE_SCRIPT'
+          set -uo pipefail
+          HOME_DIR=/home/hospital
+          echo "=== disk usage before cleanup ==="
+          df -h "$HOME_DIR" || true
+          echo "=== releases before cleanup ==="
+          ls -la "$HOME_DIR/releases" 2>/dev/null || true
+          du -sh "$HOME_DIR"/releases/* 2>/dev/null || true
+          echo "=== www.previous.* entries ==="
+          ls -la "$HOME_DIR" | grep 'www.previous' || true
+          echo "=== keeping only the release the live www symlink points to, deleting the rest ==="
+          LIVE_RELEASE="$(readlink -f "$HOME_DIR/www" 2>/dev/null | xargs dirname || true)"
+          echo "LIVE_RELEASE=$LIVE_RELEASE"
+          for d in "$HOME_DIR"/releases/*/; do
+            d="${d%/}"
+            if [ "$d" != "$LIVE_RELEASE" ]; then
+              echo "removing $d"
+              rm -rf "$d"
+            fi
+          done
+          echo "=== removing all www.previous.* backups ==="
+          rm -rf "$HOME_DIR"/www.previous.* 2>/dev/null || true
+          echo "=== removing any stale release archive ==="
+          rm -f "$HOME_DIR/meditrack-release.tgz" || true
+          echo "=== disk usage after cleanup ==="
+          df -h "$HOME_DIR" || true
+          ls -la "$HOME_DIR/releases" 2>/dev/null || true
+          REMOTE_SCRIPT
+
+      - name: Package release
+        run: |
+          rm -rf /tmp/meditrack-release
+          mkdir -p /tmp/meditrack-release
+          tar \
+            --exclude='.git' \
+            --exclude='.env*' \
+            --exclude='vendor' \
+            --exclude='storage' \
+            --exclude='bootstrap/cache' \
+            --exclude='database/*.sqlite' \
+            --exclude='.phpunit.cache' \
+            -cf - . | tar -xf - -C /tmp/meditrack-release
+          cp /tmp/meditrack.env /tmp/meditrack-release/.env
+          tar -czf /tmp/meditrack-release.tgz -C /tmp/meditrack-release .
+
+      - name: Upload release archive
+        env:
+          SSHPASS: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
+          SSH_HOST: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+          SSH_USER: ${{ secrets.ALWAYSDATA_SSH_USER }}
+        run: |
+          test -n "$SSHPASS"
+          test -n "$SSH_HOST"
+          test -n "$SSH_USER"
+          ssh_opts=(-4 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/tmp/meditrack-known-hosts)
+          sshpass -e ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" \
+            'mkdir -p /home/hospital/releases /home/hospital/shared/meditrack/storage/app/public /home/hospital/shared/meditrack/storage/framework/cache/data /home/hospital/shared/meditrack/storage/framework/sessions /home/hospital/shared/meditrack/storage/framework/views /home/hospital/shared/meditrack/storage/logs'
+          sshpass -e ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" \
+            'cat > /home/hospital/meditrack-release.tgz' < /tmp/meditrack-release.tgz
+
+      - name: Install and publish release
+        env:
+          SSHPASS: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
+          SSH_HOST: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+          SSH_USER: ${{ secrets.ALWAYSDATA_SSH_USER }}
+        run: |
+          test -n "$SSHPASS"
+          ssh_opts=(-4 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/tmp/meditrack-known-hosts)
+          sshpass -e ssh "${ssh_opts[@]}" "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE_SCRIPT'
+          set -euo pipefail
+
+          HOME_DIR=/home/hospital
+          ARCHIVE="$HOME_DIR/meditrack-release.tgz"
+          STAMP="$(date +%Y%m%d%H%M%S)"
+          RELEASE="$HOME_DIR/releases/$STAMP"
+          SHARED="$HOME_DIR/shared/meditrack"
+
+          mkdir -p "$RELEASE" "$SHARED" "$SHARED/storage/app/public" \
+            "$SHARED/storage/framework/cache/data" "$SHARED/storage/framework/sessions" \
+            "$SHARED/storage/framework/views" "$SHARED/storage/logs"
+          tar -xzf "$ARCHIVE" -C "$RELEASE"
+          mkdir -p "$RELEASE/bootstrap/cache" "$RELEASE/bootstrap/cache/views"
+          rm -rf "$RELEASE/storage"
+          ln -s "$SHARED/storage" "$RELEASE/storage"
+          printf 'VIEW_COMPILED_PATH=%s\n' "$RELEASE/bootstrap/cache/views" >> "$RELEASE/.env"
+
+          cd "$RELEASE"
+          /usr/bin/composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader --no-security-blocking --ignore-platform-req=ext-pcntl
+          /usr/bin/php artisan optimize:clear
+          /usr/bin/php artisan migrate --force
+          /usr/bin/php artisan config:cache
+          /usr/bin/php artisan route:cache
+          /usr/bin/php artisan view:cache
+          /usr/bin/php artisan storage:link || true
+
+          if [ -e "$HOME_DIR/www" ] || [ -L "$HOME_DIR/www" ]; then
+            mv "$HOME_DIR/www" "$HOME_DIR/www.previous.$STAMP"
+          fi
+          ln -s "$RELEASE/public" "$HOME_DIR/www"
+
+          # Alwaysdata serves PHP through a long-lived mod_fcgid worker. Recycle
+          # workers owned by this account so the new release is loaded immediately
+          # after the document-root symlink changes.
+          for pid in $(pgrep -u "$(id -u)" -x php-cgi 2>/dev/null || true); do
+            kill "$pid" 2>/dev/null || true
+          done
+
+          bash scripts/refresh-php-cache.sh
+
+          rm -f "$ARCHIVE"
+
+          find "$HOME_DIR/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
+            | sort -nr | tail -n +6 | cut -d' ' -f2- | xargs -r rm -rf
+          find "$HOME_DIR" -maxdepth 1 -name 'www.previous.*' -printf '%T@ %p\n' \
+            | sort -nr | tail -n +2 | cut -d' ' -f2- | xargs -r rm -rf
+          REMOTE_SCRIPT
+
+      - name: Smoke test production site
+        run: |
+          home_code="$(curl --silent --show-error --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/")"
+          login_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/login")"
+          asset_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/blade.css")"
+          health_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/api/v1/health")"
+          requests_code="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$APP_URL/appointment-requests")"
+          test "$home_code" = 302
+          test "$login_code" = 200
+          test "$asset_code" = 200
+          test "$health_code" = 200
+          test "$requests_code" = 302
+          printf 'protected_home=%s login=%s asset=%s health=%s\n' "$home_code" "$login_code" "$asset_code" "$health_code"
+
+  diagnose:
+    name: Inspect release and refresh PHP cache
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'diagnose'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 5
+    steps:
+      - name: Inspect release and PHP workers
+        env:
+          SSHPASS: ${{ secrets.ALWAYSDATA_SSH_PASSWORD }}
+          SSH_HOST: ${{ secrets.ALWAYSDATA_SSH_HOST }}
+          SSH_USER: ${{ secrets.ALWAYSDATA_SSH_USER }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install --yes sshpass
+          sshpass -e ssh -4 -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" 'bash -s' <<'REMOTE_SCRIPT'
+          set -euo pipefail
+          RELEASE="$(dirname "$(readlink -f /home/hospital/www)")"
+          echo "Published release: $RELEASE"
+          cd "$RELEASE"
+          sha256sum routes/web.php bootstrap/cache/routes-v7.php
+          /usr/bin/php artisan route:list --path=appointment-requests
+          /usr/bin/php artisan migrate:status | tail -10
+          ps -u "$(id -u)" -o pid,comm
+          echo 'Top-level application directories:'
+          find /home/hospital -maxdepth 2 -type d -not -path '*/.*' -print
+          PROBE="release-check-$(openssl rand -hex 12).php"
+          trap 'rm -f "$RELEASE/public/$PROBE"' EXIT
+          printf '%s\n' '<?php header("Content-Type: text/plain"); header("Cache-Control: no-store"); echo "routes=".hash_file("sha256", __DIR__."/../routes/web.php")."\n"; echo "opcache_reset=".(function_exists("opcache_reset") && opcache_reset() ? "ok" : "unavailable")."\n";' > "$RELEASE/public/$PROBE"
+          curl --silent --show-error --max-time 20 --write-out '\nprobe_status=%{http_code}\n' "https://hospital.alwaysdata.net/$PROBE"
+          curl --silent --show-error --max-time 20 --output /dev/null --write-out 'appointment_requests=%{http_code}\n' https://hospital.alwaysdata.net/appointment-requests
+          REMOTE_SCRIPT

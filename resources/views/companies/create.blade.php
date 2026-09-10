@@ -1,0 +1,1 @@
+@extends('layouts.app') @section('title','Add Company') @section('content')<div class="rounded-lg border bg-background p-6"><h1 class="mb-5 text-2xl font-bold">Add company</h1><form method="POST" action="{{ route('web.companies.store') }}">@csrf @include('companies._form',['submitLabel'=>'Create company'])</form></div>@endsection

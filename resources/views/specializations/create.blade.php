@@ -1,0 +1,1 @@
+@extends('layouts.app') @section('title','Add Specialization') @section('content')<div class="rounded-lg border bg-background p-6"><h1 class="mb-5 text-2xl font-bold">Add specialization</h1><form method="POST" action="{{ route('web.specializations.store') }}">@csrf @include('specializations._form',['submitLabel'=>'Create specialization'])</form></div>@endsection

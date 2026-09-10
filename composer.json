@@ -1,22 +1,25 @@
 {
-    "name": "laravel/laravel",
+    "name": "meditrack/hms",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Hospital Management System backend for East Africa — Laravel 11",
+    "keywords": ["laravel", "hospital", "hms", "east-africa", "uganda", "kenya", "tanzania", "rwanda"],
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "laravel/framework": "^11.9",
-        "laravel/jetstream": "^5.2",
+        "laravel/framework": "^11.0",
         "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.9",
-        "laravel/ui": "^4.5",
-        "livewire/livewire": "^3.0",
-        "realrashid/sweet-alert": "^7.2",
-        "resend/resend-php": "^0.13.0",
-        "symfony/http-client": "^7.1",
-        "symfony/mailgun-mailer": "^7.1",
-        "yajra/laravel-datatables-oracle": "^11.0"
+        "laravel/fortify": "^1.21",
+        "laravel/octane": "^2.0",
+        "spiral/roadrunner-cli": "^2.3",
+        "spiral/roadrunner-http": "^3.0",
+        "spatie/laravel-activitylog": "^4.7",
+        "spatie/laravel-backup": "^8.1",
+        "predis/predis": "^2.0",
+        "knuckleswtf/scribe": "^4.0",
+        "laravel/horizon": "^5.21",
+        "guzzlehttp/guzzle": "^7.8",
+        "maatwebsite/excel": "^3.1",
+        "barryvdh/laravel-dompdf": "^3.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
@@ -24,7 +27,8 @@
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.0",
-        "phpunit/phpunit": "^11.0.1"
+        "phpunit/phpunit": "^11.0",
+        "spatie/laravel-ignition": "^2.4"
     },
     "autoload": {
         "psr-4": {
@@ -43,16 +47,11 @@
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
         ],
-        "post-update-cmd": [
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-        ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
         ],
         "post-create-project-cmd": [
-            "@php artisan key:generate --ansi",
-            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
-            "@php artisan migrate --graceful --ansi"
+            "@php artisan key:generate --ansi"
         ]
     },
     "extra": {
@@ -64,8 +63,10 @@
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
+        "platform": {
+            "php": "8.3.0"
+        },
         "allow-plugins": {
-            "pestphp/pest-plugin": true,
             "php-http/discovery": true
         }
     },
