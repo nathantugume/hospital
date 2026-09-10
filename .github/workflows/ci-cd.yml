@@ -261,6 +261,8 @@ jobs:
             kill "$pid" 2>/dev/null || true
           done
 
+          bash scripts/refresh-php-cache.sh
+
           rm -f "$ARCHIVE"
 
           find "$HOME_DIR/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
@@ -275,10 +277,12 @@ jobs:
           login_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/login")"
           asset_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/blade.css")"
           health_code="$(curl --fail --silent --show-error --location --retry 3 --retry-all-errors --output /dev/null --write-out '%{http_code}' "$APP_URL/api/v1/health")"
+          requests_code="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$APP_URL/appointment-requests")"
           test "$home_code" = 302
           test "$login_code" = 200
           test "$asset_code" = 200
           test "$health_code" = 200
+          test "$requests_code" = 302
           printf 'protected_home=%s login=%s asset=%s health=%s\n' "$home_code" "$login_code" "$asset_code" "$health_code"
 
   diagnose:

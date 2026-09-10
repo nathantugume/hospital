@@ -137,6 +137,8 @@ for pid in $(pgrep -u "$(id -u)" -x php-cgi 2>/dev/null || true); do
   kill "$pid" 2>/dev/null || true
 done
 
+bash scripts/refresh-php-cache.sh
+
 rm -f "$ARCHIVE"
 
 find "$HOME_DIR/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %p\n' \
