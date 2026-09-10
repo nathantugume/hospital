@@ -304,4 +304,10 @@ jobs:
           /usr/bin/php artisan route:list --path=appointment-requests
           /usr/bin/php artisan migrate:status | tail -10
           ps -u "$(id -u)" -o pid,comm
+          echo 'Top-level application directories:'
+          find /home/hospital -maxdepth 2 -type d -not -path '*/.*' -print
+          PROBE="release-check-$(openssl rand -hex 12).php"
+          trap 'rm -f "$RELEASE/public/$PROBE"' EXIT
+          printf '%s\n' '<?php header("Content-Type: text/plain"); header("Cache-Control: no-store"); echo hash_file("sha256", __DIR__."/../routes/web.php");' > "$RELEASE/public/$PROBE"
+          curl --silent --show-error --max-time 20 --write-out '\nprobe_status=%{http_code}\n' "https://hospital.alwaysdata.net/$PROBE"
           REMOTE_SCRIPT
