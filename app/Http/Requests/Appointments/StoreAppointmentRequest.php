@@ -22,7 +22,8 @@ class StoreAppointmentRequest extends FormRequest
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'nullable|date_format:H:i|after:start_time',
             'type' => 'required|string|max:50',
-            'status' => 'nullable|in:Pending,Confirmed,Completed,Cancelled,No-Show'
+            'status' => 'nullable|in:Pending,Confirmed',
+            'notes' => 'nullable|string|max:2000',
         ];
     }
 

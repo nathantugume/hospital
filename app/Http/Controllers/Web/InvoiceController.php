@@ -11,7 +11,10 @@ class InvoiceController extends Controller
 {
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Invoice::class);
+
         $invoices = Invoice::query()
+            ->forCompany($request->user())
             ->with('patient')
             ->when($request->string('search')->trim()->value(), function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
@@ -27,10 +30,10 @@ class InvoiceController extends Controller
             ->withQueryString();
 
         $stats = [
-            'outstanding' => Invoice::whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
-            'paid_this_month' => Invoice::where('status', 'Paid')->whereMonth('payment_date', now()->month)->whereYear('payment_date', now()->year)->sum('amount'),
-            'overdue' => Invoice::where('status', 'Overdue')->count(),
-            'partial' => Invoice::where('status', 'Partial')->count(),
+            'outstanding' => Invoice::forCompany($request->user())->whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
+            'paid_this_month' => Invoice::forCompany($request->user())->where('status', 'Paid')->whereMonth('payment_date', now()->month)->whereYear('payment_date', now()->year)->sum('amount'),
+            'overdue' => Invoice::forCompany($request->user())->where('status', 'Overdue')->count(),
+            'partial' => Invoice::forCompany($request->user())->where('status', 'Partial')->count(),
         ];
 
         return view('invoices.index', compact('invoices', 'stats'));

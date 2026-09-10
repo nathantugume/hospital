@@ -15,7 +15,7 @@ class MedicineTransaction extends Model
     protected $table = 'medicine_transactions';
 
     protected $fillable = [
-        'medicine_id', 'date', 'type', 'quantity', 'reference', 'user_id', 'user_name', 'patient_id', 'supplier_id', 'notes'
+        'medicine_id', 'medicine_batch_id', 'date', 'type', 'quantity', 'reference', 'user_id', 'user_name', 'patient_id', 'supplier_id', 'notes'
     ];
 
     protected $casts = [

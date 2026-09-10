@@ -9,7 +9,7 @@ class PrescriptionPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
+        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist', 'patient',
             'lab_technician', 'pharmacist', 'accountant', 'insurance_officer',
             'inventory_manager', 'hr_manager', 'radiology_technician',
             'physiotherapist', 'surgeon', 'blood_bank_staff',
@@ -18,24 +18,29 @@ class PrescriptionPolicy
 
     public function view(User $user, Prescription $record): bool
     {
-        return $this->viewAny($user);
+        if ($user->isPatient()) {
+            return $user->patient_id === $record->patient_id;
+        }
+
+        return $this->viewAny($user)
+            && ($user->isSuperAdmin() || $user->company_id === $record->patient?->company_id);
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
-            'lab_technician', 'pharmacist', 'accountant', 'inventory_manager']);
+        return $user->hasRole(['admin', 'super_admin', 'doctor']);
     }
 
     public function update(User $user, Prescription $record): bool
     {
-        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
-            'lab_technician', 'pharmacist', 'accountant', 'inventory_manager']);
+        return $this->view($user, $record)
+            && $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
+                'lab_technician', 'pharmacist', 'accountant', 'inventory_manager']);
     }
 
     public function delete(User $user, Prescription $record): bool
     {
-        return $user->hasRole(['admin', 'super_admin']);
+        return $this->view($user, $record) && $user->hasRole(['admin', 'super_admin']);
     }
 
     public function restore(User $user, Prescription $record): bool

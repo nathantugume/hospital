@@ -12,10 +12,11 @@ class ReportController extends Controller
 {
     public function financial(Request $request, CurrencyService $currency): View
     {
+        $this->authorize('viewAny', Invoice::class);
         $from = $request->date('from') ?? now()->subMonths(5)->startOfMonth();
         $to = $request->date('to') ?? now();
 
-        $invoices = Invoice::with('patient')
+        $invoices = Invoice::forCompany($request->user())->with('patient')
             ->whereDate('date', '>=', $from->toDateString())
             ->whereDate('date', '<=', $to->toDateString())
             ->get();

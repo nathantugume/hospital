@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopesToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 
 class Staff extends Model
 {
-    use HasFactory, SoftDeletes, LogsActivity;
+    use HasFactory, SoftDeletes, LogsActivity, ScopesToCompany;
 
     protected $fillable = [
         'code', 'company_id', 'first_name', 'last_name', 'initials',
@@ -57,6 +58,7 @@ class Staff extends Model
     public function attendance(): HasMany { return $this->hasMany(StaffAttendance::class); }
     public function timesheets(): HasMany { return $this->hasMany(StaffTimesheet::class); }
     public function leaves(): HasMany { return $this->hasMany(StaffLeave::class); }
+    public function availability(): HasMany { return $this->hasMany(StaffAvailability::class); }
     public function reviews(): HasMany { return $this->hasMany(StaffReview::class); }
     public function feedback(): HasMany { return $this->hasMany(PatientFeedback::class); }
     public function payrollEntries(): HasMany { return $this->hasMany(PayrollEntry::class); }

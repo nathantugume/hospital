@@ -7,6 +7,7 @@ use App\Services\AfricasTalkingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use App\Models\Notification;
 
 class NotifyPatientOfAbnormalResult implements ShouldQueue
 {
@@ -35,10 +36,10 @@ class NotifyPatientOfAbnormalResult implements ShouldQueue
 
     protected function execute($model): void
     {
-        // Default: log only — override in specific cases below
-        Log::info('Listener executed: NotifyPatientOfAbnormalResult', [
-            'model_id' => $model->id ?? null,
-            'model_class' => get_class($model),
-        ]);
+        if ($model->status !== 'Verified' || ! $model->patient?->user) { return; }
+        Notification::firstOrCreate(
+            ['user_id' => $model->patient->user->id, 'type' => 'abnormal_lab_result', 'action_url' => route('web.laboratory.results') . '?search=' . urlencode($model->code)],
+            ['title' => 'Laboratory result available', 'message' => "Your verified {$model->test_name} result is available. Please contact your care team for interpretation.", 'category' => 'clinical', 'is_read' => false]
+        );
     }
 }

@@ -57,26 +57,26 @@ class DashboardController extends Controller
         }
 
         $stats = [
-            'active_patients' => Patient::where('status', 'Active')->count(),
-            'today_appointments' => Appointment::whereDate('date', $today)->count(),
-            'staff' => Staff::where('status', 'Active')->count(),
-            'outstanding' => Invoice::whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
-            'monthly_revenue' => Invoice::where('status', 'Paid')
+            'active_patients' => Patient::forCompany($user)->where('status', 'Active')->count(),
+            'today_appointments' => Appointment::forCompany($user)->whereDate('date', $today)->count(),
+            'staff' => Staff::forCompany($user)->where('status', 'Active')->count(),
+            'outstanding' => Invoice::forCompany($user)->whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
+            'monthly_revenue' => Invoice::forCompany($user)->where('status', 'Paid')
                 ->whereMonth('payment_date', $today->month)
                 ->whereYear('payment_date', $today->year)
                 ->sum('paid_amount'),
         ];
 
-        $upcomingAppointments = Appointment::with(['patient', 'doctor', 'department'])
+        $upcomingAppointments = Appointment::forCompany($user)->with(['patient', 'doctor', 'department'])
             ->whereDate('date', '>=', $today)
             ->orderBy('date')
             ->orderBy('start_time')
             ->limit(6)
             ->get();
 
-        $recentInvoices = Invoice::with('patient')->latest()->limit(8)->get();
+        $recentInvoices = Invoice::forCompany($user)->with('patient')->latest()->limit(8)->get();
 
-        $appointmentStatus = Appointment::whereDate('date', $today)
+        $appointmentStatus = Appointment::forCompany($user)->whereDate('date', $today)
             ->get(['status'])
             ->groupBy(fn (Appointment $appointment): string => $appointment->status ?: 'Pending')
             ->map(fn ($appointments): int => $appointments->count())
@@ -84,20 +84,20 @@ class DashboardController extends Controller
 
         // Aggregate the real reporting period for the reference dashboard chart.
         $chart = collect(\Carbon\CarbonPeriod::create($from->copy()->startOfMonth(), '1 month', $to))
-            ->map(function ($month) use ($from, $to): array {
+            ->map(function ($month) use ($from, $to, $user): array {
             $start = $month->copy()->max($from);
             $end = $month->copy()->endOfMonth()->min($to);
 
             return [
                 'month' => $month->format('M Y'),
-                'revenue' => (float) Invoice::where('status', 'Paid')
+                'revenue' => (float) Invoice::forCompany($user)->where('status', 'Paid')
                     ->whereDate('payment_date', '>=', $start->toDateString())
                     ->whereDate('payment_date', '<=', $end->toDateString())->sum('paid_amount'),
-                'visits' => Appointment::whereDate('date', '>=', $start->toDateString())
+                'visits' => Appointment::forCompany($user)->whereDate('date', '>=', $start->toDateString())
                     ->whereDate('date', '<=', $end->toDateString())->count(),
             ];
         });
-        $analytics = app(DashboardAnalytics::class)->forPeriod($from, $to);
+        $analytics = app(DashboardAnalytics::class)->forPeriod($from, $to, $user);
         $dashboardNotifications = \App\Models\Notification::where('user_id', $user->id)->latest()->limit(12)->get();
 
         return view('dashboard.admin', compact(
@@ -122,25 +122,25 @@ class DashboardController extends Controller
         $today = today();
 
         $stats = [
-            'today' => Appointment::where('doctor_id', $staffId)->whereDate('date', $today)->count(),
-            'upcoming' => Appointment::where('doctor_id', $staffId)->whereDate('date', '>=', $today)->count(),
-            'patients' => Appointment::where('doctor_id', $staffId)->distinct('patient_id')->count('patient_id'),
-            'prescriptions' => Prescription::where('doctor_id', $staffId)->where('status', 'Active')->count(),
+            'today' => Appointment::forCompany($user)->where('doctor_id', $staffId)->whereDate('date', $today)->count(),
+            'upcoming' => Appointment::forCompany($user)->where('doctor_id', $staffId)->whereDate('date', '>=', $today)->count(),
+            'patients' => Appointment::forCompany($user)->where('doctor_id', $staffId)->distinct('patient_id')->count('patient_id'),
+            'prescriptions' => Prescription::forCompany($user)->where('doctor_id', $staffId)->where('status', 'Active')->count(),
         ];
 
-        $todaysAppointments = Appointment::with(['patient', 'department'])
+        $todaysAppointments = Appointment::forCompany($user)->with(['patient', 'department'])
             ->where('doctor_id', $staffId)
             ->whereDate('date', $today)
             ->orderBy('start_time')
             ->get();
 
-        $recentPrescriptions = Prescription::with('patient')
+        $recentPrescriptions = Prescription::forCompany($user)->with('patient')
             ->where('doctor_id', $staffId)
             ->latest('date')
             ->limit(6)
             ->get();
 
-        $pendingLabRequests = TestRequest::with('patient')
+        $pendingLabRequests = TestRequest::forCompany($user)->with('patient')
             ->where('doctor_id', $staffId)
             ->whereIn('status', ['Pending', 'In Progress'])
             ->latest('requested_date')
@@ -162,18 +162,18 @@ class DashboardController extends Controller
         $departmentId = $user->staff?->department_id;
         $today = today();
 
-        $appointmentsQuery = Appointment::query()->whereDate('date', $today);
+        $appointmentsQuery = Appointment::query()->forCompany($user)->whereDate('date', $today);
         if ($departmentId) {
             $appointmentsQuery->where('department_id', $departmentId);
         }
 
         $stats = [
             'today_appointments' => (clone $appointmentsQuery)->count(),
-            'active_patients' => Patient::where('status', 'Active')->count(),
-            'on_duty_staff' => Staff::where('status', 'Active')
+            'active_patients' => Patient::forCompany($user)->where('status', 'Active')->count(),
+            'on_duty_staff' => Staff::forCompany($user)->where('status', 'Active')
                 ->when($departmentId, fn ($query) => $query->where('department_id', $departmentId))
                 ->count(),
-            'urgent_lab_requests' => TestRequest::where('priority', 'Urgent')
+            'urgent_lab_requests' => TestRequest::forCompany($user)->where('priority', 'Urgent')
                 ->whereNotIn('status', ['Completed', 'Cancelled'])
                 ->count(),
         ];
@@ -184,41 +184,43 @@ class DashboardController extends Controller
             ->limit(8)
             ->get();
 
-        $recentPatients = Patient::latest()->limit(6)->get();
+        $recentPatients = Patient::forCompany($user)->latest()->limit(6)->get();
 
         return view('dashboard.nurse', compact('user', 'stats', 'todaysAppointments', 'recentPatients'));
     }
 
     public function receptionist(Request $request): View
     {
+        $user = $request->user();
         $today = today();
 
         $stats = [
-            'today_appointments' => Appointment::whereDate('date', $today)->count(),
-            'pending_confirmation' => Appointment::whereDate('date', $today)->where('status', 'Pending')->count(),
-            'new_patients_week' => Patient::where('created_at', '>=', now()->subDays(7))->count(),
-            'active_patients' => Patient::where('status', 'Active')->count(),
+            'today_appointments' => Appointment::forCompany($user)->whereDate('date', $today)->count(),
+            'pending_confirmation' => Appointment::forCompany($user)->whereDate('date', $today)->where('status', 'Pending')->count(),
+            'new_patients_week' => Patient::forCompany($user)->where('created_at', '>=', now()->subDays(7))->count(),
+            'active_patients' => Patient::forCompany($user)->where('status', 'Active')->count(),
         ];
 
-        $todaysAppointments = Appointment::with(['patient', 'doctor', 'department'])
+        $todaysAppointments = Appointment::forCompany($user)->with(['patient', 'doctor', 'department'])
             ->whereDate('date', $today)
             ->orderBy('start_time')
             ->get();
 
-        $recentPatients = Patient::latest()->limit(8)->get();
+        $recentPatients = Patient::forCompany($user)->latest()->limit(8)->get();
 
         return view('dashboard.receptionist', compact('stats', 'todaysAppointments', 'recentPatients'));
     }
 
     public function lab(Request $request): View
     {
-        $requests = TestRequest::with(['patient', 'doctor'])->latest('requested_date')->limit(8)->get();
-        $results = LabResult::with('patient')->latest('result_date')->limit(8)->get();
+        $user = $request->user();
+        $requests = TestRequest::forCompany($user)->with(['patient', 'doctor'])->latest('requested_date')->limit(8)->get();
+        $results = LabResult::forCompany($user)->with('patient')->latest('result_date')->limit(8)->get();
 
         $stats = [
-            'pending_requests' => TestRequest::whereIn('status', ['Pending', 'In Progress'])->count(),
-            'ready_results' => LabResult::whereIn('status', ['Completed', 'Verified'])->count(),
-            'urgent' => TestRequest::where('priority', 'Urgent')->whereNotIn('status', ['Completed', 'Cancelled'])->count(),
+            'pending_requests' => TestRequest::forCompany($user)->whereIn('status', ['Pending', 'In Progress'])->count(),
+            'ready_results' => LabResult::forCompany($user)->whereIn('status', ['Completed', 'Verified'])->count(),
+            'urgent' => TestRequest::forCompany($user)->where('priority', 'Urgent')->whereNotIn('status', ['Completed', 'Cancelled'])->count(),
             'catalogue' => LabTest::where('status', 'Active')->count(),
         ];
 
@@ -235,7 +237,7 @@ class DashboardController extends Controller
         ];
 
         $lowStockMedicines = Medicine::whereColumn('stock', '<=', 'reorder_level')->orderBy('stock')->limit(6)->get();
-        $recentPrescriptions = Prescription::with(['patient', 'doctor'])
+        $recentPrescriptions = Prescription::forCompany($request->user())->with(['patient', 'doctor'])
             ->where('status', 'Active')
             ->latest('date')
             ->limit(6)
@@ -291,20 +293,21 @@ class DashboardController extends Controller
 
     public function finance(Request $request, CurrencyService $currency): View
     {
+        $user = $request->user();
         $today = today();
 
         $stats = [
-            'outstanding' => Invoice::whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
-            'paid_this_month' => Invoice::where('status', 'Paid')
+            'outstanding' => Invoice::forCompany($user)->whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
+            'paid_this_month' => Invoice::forCompany($user)->where('status', 'Paid')
                 ->whereMonth('payment_date', $today->month)
                 ->whereYear('payment_date', $today->year)
                 ->sum('amount'),
-            'overdue' => Invoice::where('status', 'Overdue')->count(),
-            'pending_claims' => InsuranceClaim::whereNotIn('status', ['Approved', 'Rejected', 'Paid'])->count(),
+            'overdue' => Invoice::forCompany($user)->where('status', 'Overdue')->count(),
+            'pending_claims' => InsuranceClaim::forCompany($user)->whereNotIn('status', ['Approved', 'Rejected', 'Paid'])->count(),
         ];
 
-        $recentInvoices = Invoice::with('patient')->latest()->limit(8)->get();
-        $recentClaims = InsuranceClaim::with('patient')->latest('submitted_date')->limit(8)->get();
+        $recentInvoices = Invoice::forCompany($user)->with('patient')->latest()->limit(8)->get();
+        $recentClaims = InsuranceClaim::forCompany($user)->with('patient')->latest('submitted_date')->limit(8)->get();
 
         return view('dashboard.finance', compact('currency', 'stats', 'recentInvoices', 'recentClaims'));
     }
@@ -314,21 +317,21 @@ class DashboardController extends Controller
         $user = $request->user();
 
         $stats = [
-            'patients' => Patient::count(),
-            'staff' => Staff::count(),
-            'appointments' => Appointment::whereDate('date', today())->count(),
-            'outstanding' => Invoice::whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
+            'patients' => Patient::forCompany($user)->count(),
+            'staff' => Staff::forCompany($user)->count(),
+            'appointments' => Appointment::forCompany($user)->whereDate('date', today())->count(),
+            'outstanding' => Invoice::forCompany($user)->whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance'),
             'medicines' => Medicine::count(),
         ];
 
-        $upcomingAppointments = Appointment::with(['patient', 'doctor', 'department'])
+        $upcomingAppointments = Appointment::forCompany($user)->with(['patient', 'doctor', 'department'])
             ->whereDate('date', '>=', today())
             ->orderBy('date')
             ->orderBy('start_time')
             ->limit(6)
             ->get();
 
-        $recentPatients = Patient::latest()->limit(6)->get();
+        $recentPatients = Patient::forCompany($user)->latest()->limit(6)->get();
 
         return view('dashboard.index', compact('user', 'stats', 'upcomingAppointments', 'recentPatients'));
     }

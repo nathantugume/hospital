@@ -44,7 +44,7 @@
                 </button>
                 <div class="doctors-submenu hidden ml-4 space-y-1 pl-2 pt-1">
                     <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.doctors.index') }}">Doctors List</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.appointments.index') }}">Doctor Schedule</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.appointments.calendar', ['view' => 'week']) }}">Doctor Schedule</a>
                     <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'specialisation']) }}">Specializations</a>
                 </div>
             </div>
@@ -71,8 +71,8 @@
                 </button>
                 <div class="appointments-submenu hidden ml-4 space-y-1 pl-2 pt-1">
                                 <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.appointments.index') }}">All Appointments</a>
-                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'appointment-calendar']) }}">Calendar View</a>
-                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'appointment-requests']) }}">Appointment Requests</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.appointments.calendar') }}">Calendar View</a>
+                                <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.appointment-requests.index') }}">Appointment Requests</a>
                 </div>
             </div>
 
@@ -95,8 +95,8 @@
                     </svg>
                 </button>
                 <div class="prescriptions-submenu hidden ml-4 space-y-1 pl-2 pt-1">
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'prescriptions']) }}">All Prescriptions</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'medicine-templates']) }}">Medicine Templates</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.prescriptions.index') }}">All Prescriptions</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.pharmacy.templates') }}">Medicine Templates</a>
                 </div>
             </div>
 
@@ -142,12 +142,12 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="laboratory-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
                 <div class="laboratory-submenu hidden ml-4 space-y-1 pl-2 pt-1">
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.laboratory.catalogue') }}">Test Catalog</a>
                     <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.laboratory.index') }}">Lab Dashboard</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'lab-tests-management']) }}">Test Catalog</a>
                     <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.laboratory.requests') }}">Test Requests</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'sample-collection']) }}">Sample Collection</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'result-entry']) }}">Result Entry</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'lab-equipment']) }}">Equipment</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.laboratory.requests') }}">Sample Collection</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.laboratory.results') }}">Result Entry</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.laboratory.equipment') }}">Equipment</a>
                 </div>
             </div>
 
@@ -257,8 +257,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"  stroke-linecap="round" stroke-linejoin="round" class="departments-arrow h-4 w-4 transition-transform duration-200"><polyline points="6 9 12 15 18 9"></polyline></svg>
                 </button>
                 <div class="departments-submenu hidden ml-4 space-y-1 pl-2 pt-1">
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'departments']) }}">Department List</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'services']) }}">Services Offered</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.departments.index') }}">Department List</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.services.index') }}">Services Offered</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.wards.index') }}">Wards</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.specializations.index') }}">Specializations</a>
                 </div>
             </div>
 
@@ -290,9 +292,9 @@
                 </button>
                 <div class="staff-submenu hidden ml-4 space-y-1 pl-2 pt-1">
                     <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.staff.index') }}">All Staff</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'add-staff']) }}">Add Staff</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'roles-permissions']) }}">Roles &amp; Permissions</a>
-                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'staff-attendance']) }}">Attendance</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.staff.create') }}">Add Staff</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.roles.index') }}">Roles &amp; Permissions</a>
+                    <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('web.staff.index') }}">HR Records</a>
                     <a class="flex items-center rounded-md px-3 py-2 text-sm transition-colors text-gray-600 hover:bg-gray-100 hover:text-gray-900" href="{{ route('legacy.page', ['page' => 'payroll']) }}">Payroll</a>
                 </div>
             </div>

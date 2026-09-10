@@ -5,6 +5,7 @@
 
 @section('content')
 <div class="flex flex-col gap-5">
+    @can('create', \App\Models\TestRequest::class)<div class="flex justify-end"><a href="{{ route('web.laboratory.requests.create') }}" class="inline-flex h-10 items-center rounded-md bg-primary px-4 text-sm text-white">+ New test request</a></div>@endcan
     <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div class="flex items-center gap-2 flex-wrap">
             <a href="{{ route('web.laboratory.index') }}" class="inline-flex items-center justify-center rounded-md border border-gray-300 bg-background hover:bg-accent hover:text-accent-foreground size-10" aria-label="Back to laboratory">
@@ -80,7 +81,7 @@
                                 $priorityClasses = $testRequest->priority === 'Urgent' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-700';
                             @endphp
                             <tr class="border-b hover:bg-gray-50">
-                                <td class="p-4 align-middle font-medium">{{ $testRequest->code }}</td>
+                                <td class="p-4 align-middle font-medium"><a class="text-primary" href="{{ route('web.laboratory.requests.show',$testRequest) }}">{{ $testRequest->code }}</a></td>
                                 <td class="p-4 align-middle">{{ $testRequest->patient?->full_name ?? 'Unknown patient' }}</td>
                                 <td class="p-4 align-middle">{{ $testRequest->doctor?->full_name ?? 'Unassigned' }}</td>
                                 <td class="p-4 align-middle">{{ optional($testRequest->requested_date)->format('d M Y') }}</td>

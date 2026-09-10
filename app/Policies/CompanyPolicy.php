@@ -9,33 +9,27 @@ class CompanyPolicy
 {
     public function viewAny(User $user): bool
     {
-        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
-            'lab_technician', 'pharmacist', 'accountant', 'insurance_officer',
-            'inventory_manager', 'hr_manager', 'radiology_technician',
-            'physiotherapist', 'surgeon', 'blood_bank_staff',
-            'ambulance_dispatcher', 'ambulance_driver']);
+        return $user->isSuperAdmin();
     }
 
     public function view(User $user, Company $record): bool
     {
-        return $this->viewAny($user);
+        return $user->isSuperAdmin();
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
-            'lab_technician', 'pharmacist', 'accountant', 'inventory_manager']);
+        return $user->isSuperAdmin();
     }
 
     public function update(User $user, Company $record): bool
     {
-        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
-            'lab_technician', 'pharmacist', 'accountant', 'inventory_manager']);
+        return $user->isSuperAdmin();
     }
 
     public function delete(User $user, Company $record): bool
     {
-        return $user->hasRole(['admin', 'super_admin']);
+        return $user->isSuperAdmin();
     }
 
     public function restore(User $user, Company $record): bool

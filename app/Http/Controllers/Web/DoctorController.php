@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Department;
 use App\Models\Staff;
+use App\Models\Specialization;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,12 +18,14 @@ class DoctorController extends Controller
     /** Options mirrored from the add-doctor/edit-doctor templates' Position select. */
     public const POSITIONS = ['Consultant', 'Senior Resident', 'Junior Resident', 'Chief of Department', 'Attending Physician'];
 
-    /** Options mirrored from the templates' specialization selects. */
-    public const SPECIALIZATIONS = ['Cardiology', 'Neurology', 'Pediatrics', 'Dermatology', 'Orthopedics', 'Radiology'];
+    public const DEFAULT_SPECIALIZATIONS = ['Cardiology', 'Neurology', 'Pediatrics', 'Dermatology', 'Orthopedics', 'Radiology'];
 
     public function index(Request $request): View
     {
+        $this->authorize('viewAny', Staff::class);
+
         $doctors = Staff::query()
+            ->forCompany($request->user())
             ->whereNotNull('specialization')
             ->with('department')
             ->when($request->string('search')->trim()->value(), function ($query, string $search): void {
@@ -56,35 +59,38 @@ class DoctorController extends Controller
         });
 
         $stats = [
-            'total' => Staff::whereNotNull('specialization')->count(),
-            'active' => Staff::whereNotNull('specialization')->where('status', 'Active')->count(),
-            'on_leave' => Staff::whereNotNull('specialization')->where('status', 'On Leave')->count(),
-            'departments' => Department::where('status', 'Active')->count(),
+            'total' => Staff::forCompany($request->user())->whereNotNull('specialization')->count(),
+            'active' => Staff::forCompany($request->user())->whereNotNull('specialization')->where('status', 'Active')->count(),
+            'on_leave' => Staff::forCompany($request->user())->whereNotNull('specialization')->where('status', 'On Leave')->count(),
+            'departments' => Department::forCompany($request->user())->where('status', 'Active')->count(),
         ];
 
-        $specialties = Staff::whereNotNull('specialization')->distinct()->orderBy('specialization')->pluck('specialization');
+        $specialties = Staff::forCompany($request->user())->whereNotNull('specialization')->distinct()->orderBy('specialization')->pluck('specialization');
 
         return view('doctors.index', compact('doctors', 'stats', 'specialties'));
     }
 
-    public function create(): View
+    public function create(Request $request): View
     {
-        $departments = Department::where('status', 'Active')->orderBy('name')->get(['id', 'name']);
+        $this->authorize('create', Staff::class);
+        $departments = Department::forCompany($request->user())->where('status', 'Active')->orderBy('name')->get(['id', 'name']);
 
         return view('doctors.create', [
             'departments' => $departments,
             'positions' => self::POSITIONS,
-            'specializations' => self::SPECIALIZATIONS,
+            'specializations' => $this->specializationOptions($request),
         ]);
     }
 
     public function store(Request $request): RedirectResponse
     {
+        $this->authorize('create', Staff::class);
         $validated = $this->validated($request);
+        Department::forCompany($request->user())->findOrFail($validated['department_id']);
 
         $doctor = Staff::create(array_merge(
             $this->staffAttributes($validated),
-            ['code' => $this->nextStaffCode(), 'status' => 'Active']
+            ['company_id' => $request->user()->company_id, 'code' => $this->nextStaffCode(), 'status' => 'Active']
         ));
 
         $this->syncAccount($doctor, $request, $validated);
@@ -96,6 +102,7 @@ class DoctorController extends Controller
 
     public function show(Staff $doctor): View
     {
+        $this->authorize('view', $doctor);
         abort_unless($doctor->specialization !== null, 404);
 
         $doctor->load('department');
@@ -124,26 +131,29 @@ class DoctorController extends Controller
         return view('doctors.show', compact('doctor', 'appointments', 'patientCount', 'performance', 'todaysAppointments'));
     }
 
-    public function edit(Staff $doctor): View
+    public function edit(Request $request, Staff $doctor): View
     {
+        $this->authorize('update', $doctor);
         abort_unless($doctor->specialization !== null, 404);
 
-        $departments = Department::where('status', 'Active')->orderBy('name')->get(['id', 'name']);
+        $departments = Department::forCompany($request->user())->where('status', 'Active')->orderBy('name')->get(['id', 'name']);
 
         return view('doctors.edit', [
             'doctor' => $doctor,
             'departments' => $departments,
             'positions' => self::POSITIONS,
-            'specializations' => self::SPECIALIZATIONS,
+            'specializations' => $this->specializationOptions($request),
             'account' => $doctor->user()->first(),
         ]);
     }
 
     public function update(Request $request, Staff $doctor): RedirectResponse
     {
+        $this->authorize('update', $doctor);
         abort_unless($doctor->specialization !== null, 404);
 
         $validated = $this->validated($request, $doctor->id);
+        Department::forCompany($request->user())->findOrFail($validated['department_id']);
 
         $doctor->update($this->staffAttributes($validated));
 
@@ -156,9 +166,11 @@ class DoctorController extends Controller
 
     public function destroy(Staff $doctor): RedirectResponse
     {
+        $this->authorize('delete', $doctor);
         abort_unless($doctor->specialization !== null, 404);
 
         $doctor->update(['status' => 'Inactive']);
+        $doctor->user()->each(fn (User $user) => $user->delete());
 
         return redirect()
             ->route('web.doctors.index')
@@ -179,7 +191,7 @@ class DoctorController extends Controller
             'phone' => ['required', 'string', 'max:30'],
             'emergency_contact_name' => ['nullable', 'string', 'max:255'],
             'emergency_contact_phone' => ['nullable', 'string', 'max:30'],
-            'primary_specialization' => ['required', Rule::in(self::SPECIALIZATIONS)],
+            'primary_specialization' => ['required', Rule::in($this->specializationOptions($request)->all())],
             'secondary_specialization' => ['nullable', 'string', 'max:255'],
             'license' => ['nullable', 'string', 'max:100'],
             'license_expiry' => ['nullable', 'date'],
@@ -193,6 +205,14 @@ class DoctorController extends Controller
             'password' => ['nullable', 'string', 'min:8'],
             'account_email' => ['nullable', 'email', 'max:255'],
         ]);
+    }
+
+    private function specializationOptions(Request $request)
+    {
+        return Specialization::forCompany($request->user())->where('status', 'Active')->pluck('name')
+            ->merge(Staff::forCompany($request->user())->whereNotNull('specialization')->distinct()->pluck('specialization'))
+            ->merge(self::DEFAULT_SPECIALIZATIONS)
+            ->filter()->unique()->sort()->values();
     }
 
     private function staffAttributes(array $validated): array
@@ -247,12 +267,13 @@ class DoctorController extends Controller
 
         $accountEmail = $validated['account_email'] ?: $validated['email'];
 
-        $user = $doctor->user()->first() ?? User::where('email', $accountEmail)->first();
+        $user = $doctor->user()->withTrashed()->first() ?? User::withTrashed()->where('email', $accountEmail)->first();
 
         $attributes = [
             'name' => $doctor->full_name,
             'email' => $accountEmail,
             'role' => 'doctor',
+            'company_id' => $doctor->company_id,
             'staff_id' => $doctor->id,
         ];
 
@@ -262,6 +283,9 @@ class DoctorController extends Controller
 
         if ($user) {
             $user->update($attributes);
+            if ($user->trashed()) {
+                $user->restore();
+            }
 
             return;
         }

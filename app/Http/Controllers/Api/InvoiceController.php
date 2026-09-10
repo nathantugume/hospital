@@ -16,12 +16,18 @@ class InvoiceController extends Controller
     {
         $this->authorize('viewAny', Invoice::class);
 
-        $query = Invoice::query()->with(['patient', 'items', 'insuranceClaims']);
+        $query = Invoice::query()->forCompany($request->user())->with(['patient', 'items', 'insuranceClaims']);
+
+        if ($request->user()->isPatient()) {
+            $query->where('patient_id', $request->user()->patient_id);
+        }
 
         if ($search = $request->input('search')) {
-            $query->where('code', 'like', "%{$search}%")
-                  ->orWhereHas('patient', fn($q) => $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%"));
+            $query->where(function ($query) use ($search): void {
+                $query->where('code', 'like', "%{$search}%")
+                    ->orWhereHas('patient', fn($q) => $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%"));
+            });
         }
 
         if ($status = $request->input('status')) {
@@ -47,6 +53,8 @@ class InvoiceController extends Controller
     {
         $this->authorize('create', Invoice::class);
         $data = $request->validated();
+        $data['company_id'] = $request->user()->company_id;
+        abort_unless(\App\Models\Patient::forCompany($request->user())->whereKey($data['patient_id'])->exists(), 422);
 
         if (empty($data['code'])) {
             $data['code'] = 'INV-' . str_pad((string) (Invoice::max('id') + 1), 5, '0', STR_PAD_LEFT);

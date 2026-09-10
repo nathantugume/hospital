@@ -18,24 +18,24 @@ class DepartmentPolicy
 
     public function view(User $user, Department $record): bool
     {
-        return $this->viewAny($user);
+        return $this->viewAny($user)
+            && ($user->isSuperAdmin() || $user->company_id === $record->company_id);
     }
 
     public function create(User $user): bool
     {
-        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
-            'lab_technician', 'pharmacist', 'accountant', 'inventory_manager']);
+        return $user->hasRole(['admin', 'super_admin', 'hr_manager']);
     }
 
     public function update(User $user, Department $record): bool
     {
-        return $user->hasRole(['admin', 'super_admin', 'doctor', 'nurse', 'receptionist',
-            'lab_technician', 'pharmacist', 'accountant', 'inventory_manager']);
+        return $this->view($user, $record)
+            && $user->hasRole(['admin', 'super_admin', 'hr_manager']);
     }
 
     public function delete(User $user, Department $record): bool
     {
-        return $user->hasRole(['admin', 'super_admin']);
+        return $this->view($user, $record) && $user->hasRole(['admin', 'super_admin']);
     }
 
     public function restore(User $user, Department $record): bool

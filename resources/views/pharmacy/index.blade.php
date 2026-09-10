@@ -10,7 +10,7 @@
             <h1 class="text-2xl lg:text-3xl font-bold tracking-tight mb-2 text-gray-900">Pharmacy</h1>
             <p class="text-gray-500">Monitor medicine stock, expiry risk, and prescription activity.</p>
         </div>
-        <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ Add medicine <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
+        @can('create', App\Models\Medicine::class)<a href="{{ route('web.pharmacy.create') }}" class="inline-flex items-center justify-center rounded-md bg-primary text-white h-10 px-4 py-2 text-sm">+ Add medicine</a>@endcan
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -75,7 +75,7 @@
                                     $statusClasses = $isOut ? 'bg-red-500 text-white' : ($isLow ? 'bg-amber-500 text-white' : 'bg-green-500 text-white');
                                 @endphp
                                 <tr class="border-b hover:bg-gray-50 transition-colors">
-                                    <td class="p-4 align-middle"><div class="font-medium">{{ $medicine->name }}</div><div class="text-gray-500 text-xs">{{ $medicine->code }}{{ $medicine->generic_name ? ' · '.$medicine->generic_name : '' }}</div></td>
+                                    <td class="p-4 align-middle"><a class="font-medium text-primary" href="{{ route('web.pharmacy.show',$medicine) }}">{{ $medicine->name }}</a><div class="text-gray-500 text-xs">{{ $medicine->code }}{{ $medicine->generic_name ? ' · '.$medicine->generic_name : '' }}</div></td>
                                     <td class="p-4 align-middle">{{ $medicine->category ?: 'General' }}</td>
                                     <td class="p-4 align-middle">{{ number_format($medicine->stock) }} <span class="text-gray-500">/ {{ number_format($medicine->reorder_level) }}</span></td>
                                     <td class="p-4 align-middle font-medium">@money($medicine->selling_price)</td>

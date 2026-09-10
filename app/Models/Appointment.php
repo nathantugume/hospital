@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopesToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Spatie\Activitylog\LogOptions;
 
 class Appointment extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, ScopesToCompany;
 
     protected $table = 'appointments';
 
@@ -26,6 +27,7 @@ class Appointment extends Model
     public function patient(): BelongsTo { return $this->belongsTo(Patient::class); }
     public function doctor(): BelongsTo { return $this->belongsTo(Staff::class, 'doctor_id'); }
     public function department(): BelongsTo { return $this->belongsTo(Department::class); }
+    public function service(): BelongsTo { return $this->belongsTo(Service::class); }
     public function company(): BelongsTo { return $this->belongsTo(Company::class); }
 
     public function getActivitylogOptions(): LogOptions

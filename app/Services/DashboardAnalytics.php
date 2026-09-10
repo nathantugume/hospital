@@ -6,23 +6,24 @@ use App\Models\Appointment;
 use App\Models\Invoice;
 use App\Models\Patient;
 use App\Models\Staff;
+use App\Models\User;
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\DB;
 
 class DashboardAnalytics
 {
-    public function forPeriod(CarbonInterface $from, CarbonInterface $to): array
+    public function forPeriod(CarbonInterface $from, CarbonInterface $to, User $user): array
     {
-        $appointments = Appointment::whereDate('date', '>=', $from->toDateString())
+        $appointments = Appointment::forCompany($user)->whereDate('date', '>=', $from->toDateString())
             ->whereDate('date', '<=', $to->toDateString());
-        $payments = Invoice::where('status', 'Paid')
+        $payments = Invoice::forCompany($user)->where('status', 'Paid')
             ->whereDate('payment_date', '>=', $from->toDateString())
             ->whereDate('payment_date', '<=', $to->toDateString());
 
         $demographics = collect([[0, 17], [18, 34], [35, 49], [50, 64], [65, null]])
-            ->map(function (array $ages): array {
+            ->map(function (array $ages) use ($user): array {
                 [$minimum, $maximum] = $ages;
-                $counts = Patient::query()->where(function ($query) use ($minimum, $maximum): void {
+                $counts = Patient::forCompany($user)->where(function ($query) use ($minimum, $maximum): void {
                     $query->where(function ($birthDate) use ($minimum, $maximum): void {
                         $birthDate->whereDate('date_of_birth', '<=', today()->subYears($minimum));
                         if ($maximum !== null) {
@@ -44,16 +45,20 @@ class DashboardAnalytics
                 ];
             });
 
-        $feedback = DB::table('patient_feedback')->whereDate('date', '>=', $from->toDateString())
-            ->whereDate('date', '<=', $to->toDateString())
-            ->select('category')->selectRaw('AVG(rating) AS rating, COUNT(*) AS responses')
-            ->groupBy('category')->orderBy('category')->get();
+        $feedback = DB::table('patient_feedback')->join('patients', 'patient_feedback.patient_id', '=', 'patients.id')
+            ->when(! $user->isSuperAdmin(), fn ($query) => $query->where('patients.company_id', $user->company_id))
+            ->whereDate('patient_feedback.date', '>=', $from->toDateString())
+            ->whereDate('patient_feedback.date', '<=', $to->toDateString())
+            ->select('patient_feedback.category')->selectRaw('AVG(patient_feedback.rating) AS rating, COUNT(*) AS responses')
+            ->groupBy('patient_feedback.category')->orderBy('patient_feedback.category')->get();
 
-        $reviews = DB::table('staff_reviews')->whereDate('review_date', '>=', $from->toDateString())
-            ->whereDate('review_date', '<=', $to->toDateString())
-            ->whereNotNull('rating')->select('staff_id')->selectRaw('AVG(rating) AS rating, COUNT(*) AS reviews')
-            ->groupBy('staff_id')->orderByDesc('rating')->limit(5)->get();
-        $staff = Staff::whereIn('id', $reviews->pluck('staff_id'))->get()->keyBy('id');
+        $reviews = DB::table('staff_reviews')->join('staff', 'staff_reviews.staff_id', '=', 'staff.id')
+            ->when(! $user->isSuperAdmin(), fn ($query) => $query->where('staff.company_id', $user->company_id))
+            ->whereDate('staff_reviews.review_date', '>=', $from->toDateString())
+            ->whereDate('staff_reviews.review_date', '<=', $to->toDateString())
+            ->whereNotNull('staff_reviews.rating')->select('staff_reviews.staff_id')->selectRaw('AVG(staff_reviews.rating) AS rating, COUNT(*) AS reviews')
+            ->groupBy('staff_reviews.staff_id')->orderByDesc('rating')->limit(5)->get();
+        $staff = Staff::forCompany($user)->whereIn('id', $reviews->pluck('staff_id'))->get()->keyBy('id');
 
         return [
             'periodRevenue' => (float) (clone $payments)->sum('paid_amount'),

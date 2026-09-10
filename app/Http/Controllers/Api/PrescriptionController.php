@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Prescription;
+use App\Services\PrescriptionDispensingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class PrescriptionController extends Controller
     {
         $this->authorize('viewAny', Prescription::class);
 
-        $query = Prescription::query();
+        $query = Prescription::query()->forCompany($request->user());
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -49,6 +50,11 @@ class PrescriptionController extends Controller
     {
         $this->authorize('create', Prescription::class);
         $data = $request->validate(['patient_id' => 'required|exists:patients,id', 'doctor_id' => 'nullable|exists:staff,id', 'date' => 'required|date', 'medications' => 'nullable|string', 'refills' => 'nullable|integer|min:0']);
+        abort_unless(\App\Models\Patient::forCompany($request->user())->whereKey($data['patient_id'])->exists(), 422);
+
+        if (! empty($data['doctor_id'])) {
+            abort_unless(\App\Models\Staff::forCompany($request->user())->whereKey($data['doctor_id'])->exists(), 422);
+        }
 
         if (empty($data['code'])) { $data['code'] = 'RX-' . str_pad((string) (Prescription::max('id') + 1), 5, '0', STR_PAD_LEFT); }
 
@@ -95,11 +101,17 @@ class PrescriptionController extends Controller
         ]);
     }
 
-    public function dispense(Request $request, Prescription $prescription): JsonResponse
+    public function dispense(Request $request, Prescription $prescription, PrescriptionDispensingService $dispensing): JsonResponse
     {
         $this->authorize('update', $prescription);
-        $prescription->update(['status' => 'Dispensed']);
-        return response()->json(['success' => true, 'message' => 'Prescription dispensed.', 'data' => $prescription]);
+        abort_unless($request->user()->hasRole(['admin', 'super_admin', 'pharmacist']), 403);
+        $data = $request->validate([
+            'dispense' => ['required', 'array'],
+            'dispense.*.batch_id' => ['required', 'integer', 'exists:medicine_batches,id'],
+            'dispense.*.quantity' => ['required', 'integer', 'min:1'],
+        ]);
+        $result = $dispensing->dispense($prescription, $request->user(), $data['dispense']);
+        return response()->json(['success' => true, 'message' => 'Prescription dispensed.', 'data' => $result]);
     }
 
     public function renew(Request $request, Prescription $prescription): JsonResponse

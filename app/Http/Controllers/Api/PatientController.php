@@ -16,7 +16,7 @@ class PatientController extends Controller
     {
         $this->authorize('viewAny', Patient::class);
 
-        $query = Patient::query()->with(['company', 'insurances', 'emergencyContacts']);
+        $query = Patient::query()->forCompany($request->user())->with(['company', 'insurances', 'emergencyContacts']);
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -67,6 +67,7 @@ class PatientController extends Controller
     {
         $this->authorize('create', Patient::class);
         $data = $request->validated();
+        $data['company_id'] = $request->user()->company_id;
 
         if (empty($data['code'])) {
             $data['code'] = 'P-' . str_pad((string) (Patient::max('id') + 1), 5, '0', STR_PAD_LEFT);

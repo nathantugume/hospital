@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopesToCompanyOrShared;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -9,12 +10,12 @@ use Spatie\Activitylog\LogOptions;
 
 class LabTest extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, ScopesToCompanyOrShared;
 
     protected $table = 'lab_tests';
 
     protected $fillable = [
-        'code', 'name', 'department', 'sample_type', 'price', 'currency', 'target_turnaround_hours', 'status'
+        'company_id', 'code', 'name', 'department', 'sample_type', 'price', 'currency', 'target_turnaround_hours', 'status'
     ];
 
     protected $casts = [

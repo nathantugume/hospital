@@ -11,8 +11,8 @@
             <p class="text-gray-500">Coordinate patient visits, clinicians, and daily care capacity.</p>
         </div>
         <div class="flex flex-wrap gap-3">
-            <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">Calendar view <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
-            <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ New appointment <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
+            <a href="{{ route('web.appointments.calendar') }}" class="inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-background hover:bg-accent h-10 px-4 py-2 text-sm">Calendar view</a>
+            @can('create', \App\Models\Appointment::class)<a href="{{ route('web.appointments.create') }}" class="inline-flex items-center justify-center rounded-md bg-primary text-white hover:bg-primary/90 h-10 px-4 py-2 text-sm shadow-sm">+ New appointment</a>@endcan
         </div>
     </div>
 
@@ -73,7 +73,7 @@
                             <th class="h-12 px-4 text-left font-medium text-gray-600">Department</th>
                             <th class="h-12 px-4 text-left font-medium text-gray-600">Date &amp; time</th>
                             <th class="h-12 px-4 text-left font-medium text-gray-600">Type</th>
-                            <th class="h-12 px-4 text-left font-medium text-gray-600">Status</th>
+                            <th class="h-12 px-4 text-left font-medium text-gray-600">Status</th><th class="h-12 px-4 text-right font-medium text-gray-600">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -92,7 +92,7 @@
                                 <td class="p-4 align-middle text-gray-600">{{ $appointment->department?->name ?? '—' }}</td>
                                 <td class="p-4 align-middle"><p>{{ optional($appointment->date)->format('d M Y') }}</p><p class="text-gray-500">{{ substr((string) $appointment->start_time, 0, 5) }}</p></td>
                                 <td class="p-4 align-middle text-gray-600">{{ $appointment->type }}</td>
-                                <td class="p-4 align-middle"><div class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $appointment->status ?? 'Pending' }}</div></td>
+                                <td class="p-4 align-middle"><div class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $appointment->status ?? 'Pending' }}</div></td><td class="p-4 text-right"><a href="{{ route('web.appointments.show', $appointment) }}" class="text-sm text-primary hover:underline">View</a></td>
                             </tr>
                         @endforeach
                     </tbody>

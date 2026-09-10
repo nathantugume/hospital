@@ -1,0 +1,1 @@
+@extends('layouts.app') @section('title','Edit Ward') @section('content')<div class="rounded-lg border bg-background p-6"><h1 class="mb-5 text-2xl font-bold">Edit ward</h1><form method="POST" action="{{ route('web.wards.update',$ward) }}">@csrf @method('PUT') @include('wards._form',['submitLabel'=>'Save changes'])</form></div>@endsection

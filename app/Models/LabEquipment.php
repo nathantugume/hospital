@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopesToCompanyOrShared;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -9,12 +10,12 @@ use Spatie\Activitylog\LogOptions;
 
 class LabEquipment extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, ScopesToCompanyOrShared;
 
     protected $table = 'lab_equipment';
 
     protected $fillable = [
-        'code', 'name', 'department', 'serial_number', 'last_maintenance', 'next_maintenance', 'status', 'location', 'manufacturer', 'purchase_date', 'purchase_cost', 'warranty_expiry', 'service_provider', 'notes'
+        'company_id', 'code', 'name', 'department', 'serial_number', 'last_maintenance', 'next_maintenance', 'status', 'location', 'manufacturer', 'purchase_date', 'purchase_cost', 'warranty_expiry', 'service_provider', 'notes'
     ];
 
     protected $casts = [

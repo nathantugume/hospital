@@ -15,8 +15,11 @@
                 <p class="text-gray-500">View and manage doctor information.</p>
             </div>
         </div>
-        @if (auth()->user()->isAdmin())
-            <div class="flex gap-2">
+        <div class="flex gap-2">
+            @can('manageAvailability', $doctor)
+                <a href="{{ route('web.doctors.availability.index', $doctor) }}" class="inline-flex items-center gap-2 border border-gray-300 bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 rounded-md text-sm">Availability</a>
+            @endcan
+            @if (auth()->user()->isAdmin())
                 <a href="{{ route('web.doctors.edit', $doctor) }}" class="inline-flex items-center gap-2 border border-gray-300 bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 rounded-md text-sm">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"></path></svg> Edit doctor
                 </a>
@@ -27,8 +30,8 @@
                         <button type="submit" class="border border-red-200 text-red-600 bg-background hover:bg-red-50 h-10 px-4 rounded-md text-sm">Deactivate</button>
                     </form>
                 @endif
-            </div>
-        @endif
+            @endif
+        </div>
     </div>
 
     <div class="grid gap-5 lg:grid-cols-[320px_1fr]">

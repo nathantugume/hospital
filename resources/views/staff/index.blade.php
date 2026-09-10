@@ -10,9 +10,9 @@
             <h1 class="text-2xl lg:text-3xl font-bold tracking-tight mb-2">Care team</h1>
             <p class="text-gray-500">Find clinicians and staff by department, role, and availability.</p>
         </div>
-        @if (auth()->user()->isAdmin())
-            <span class="inline-flex items-center justify-center gap-2 rounded-md border border-dashed border-gray-300 text-gray-400 h-10 px-4 py-2 text-sm cursor-not-allowed" title="Coming soon">+ Add staff member <span class="text-[10px] uppercase tracking-wide bg-gray-100 text-gray-400 px-1.5 py-0.5 rounded-full">Soon</span></span>
-        @endif
+        @can('create', \App\Models\Staff::class)
+            <a href="{{ route('web.staff.create') }}" class="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm text-white">+ Add staff member</a>
+        @endcan
     </div>
 
     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -76,7 +76,7 @@
                                 <th class="h-12 px-4 text-left hidden md:table-cell">Department</th>
                                 <th class="h-12 px-4 text-left hidden md:table-cell">Specialization</th>
                                 <th class="h-12 px-4 text-left hidden md:table-cell">Contact</th>
-                                <th class="h-12 px-4 text-left">Status</th>
+                                <th class="h-12 px-4 text-left">Status</th><th class="h-12 px-4 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -89,12 +89,12 @@
                                     };
                                 @endphp
                                 <tr class="border-b hover:bg-accent hover:text-accent-foreground">
-                                    <td class="p-4"><div class="flex items-center gap-3"><span class="relative flex h-10 w-10 shrink-0 overflow-hidden rounded-full bg-indigo-100 items-center justify-center font-medium text-indigo-700">{{ strtoupper(substr($member->full_name, 0, 1)) }}</span><div><div class="font-medium">{{ $member->full_name }}</div><div class="text-xs text-gray-500">{{ $member->code }}</div></div></div></td>
+                                    <td class="p-4"><div class="flex items-center gap-3"><span class="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full bg-indigo-100 font-medium text-indigo-700">{{ strtoupper(substr($member->full_name, 0, 1)) }}</span><div><a href="{{ route('web.staff.show', $member) }}" class="font-medium text-primary hover:underline">{{ $member->full_name }}</a><div class="text-xs text-gray-500">{{ $member->code }}</div></div></div></td>
                                     <td class="p-4">{{ $member->position ?: $member->role ?: 'Care team' }}</td>
                                     <td class="p-4 hidden md:table-cell">{{ $member->department?->name ?? '—' }}</td>
                                     <td class="p-4 hidden md:table-cell">{{ $member->specialization ?: 'General care' }}</td>
                                     <td class="p-4 hidden md:table-cell text-xs text-gray-500">{{ $member->email ?: '—' }}</td>
-                                    <td class="p-4"><span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $member->status ?? 'Active' }}</span></td>
+                                    <td class="p-4"><span class="inline-flex rounded-full px-2 py-0.5 text-xs font-semibold {{ $statusClasses }}">{{ $member->status ?? 'Active' }}</span></td><td class="p-4 text-right"><a href="{{ route('web.staff.show', $member) }}" class="text-primary hover:underline">View</a>@can('update', $member)<a href="{{ route('web.staff.edit', $member) }}" class="ml-3 text-primary hover:underline">Edit</a>@endcan</td>
                                 </tr>
                             @endforeach
                         </tbody>

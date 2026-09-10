@@ -10,6 +10,7 @@ use App\Models\LabResult;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
+use Illuminate\View\View;
 
 class LabResultController extends Controller
 {
@@ -17,11 +18,13 @@ class LabResultController extends Controller
     {
         $this->authorize('viewAny', LabResult::class);
 
-        $query = LabResult::query()->with(['patient', 'labTest', 'orderedBy', 'verifiedBy', 'items']);
+        $query = LabResult::query()->forCompany($request->user())->with(['patient', 'labTest', 'orderedBy', 'verifiedBy', 'items']);
 
         if ($search = $request->input('search')) {
-            $query->where('code', 'like', "%{$search}%")
-                  ->orWhereHas('patient', fn($q) => $q->where('first_name', 'like', "%{$search}%"));
+            $query->where(function ($query) use ($search): void {
+                $query->where('code', 'like', "%{$search}%")
+                    ->orWhereHas('patient', fn($q) => $q->where('first_name', 'like', "%{$search}%"));
+            });
         }
 
         if ($status = $request->input('status')) {
@@ -55,6 +58,7 @@ class LabResultController extends Controller
     {
         $this->authorize('create', LabResult::class);
         $data = $request->validated();
+        abort_unless(\App\Models\Patient::forCompany($request->user())->whereKey($data['patient_id'])->exists(), 422);
 
         if (empty($data['code'])) {
             $data['code'] = 'RES-' . str_pad((string) (LabResult::max('id') + 1), 4, '0', STR_PAD_LEFT);
@@ -67,11 +71,6 @@ class LabResultController extends Controller
             foreach ($data['items'] as $item) {
                 $result->items()->create($item);
             }
-        }
-
-        // Fire abnormal result event if flagged
-        if (in_array($result->flag, ['High', 'Low', 'Critical'])) {
-            event(new \App\Events\AbnormalLabResult($result));
         }
 
         $result->load(['patient', 'labTest', 'orderedBy', 'items']);
@@ -103,11 +102,15 @@ class LabResultController extends Controller
     public function verify(Request $request, LabResult $labResult): JsonResponse
     {
         $this->authorize('update', $labResult);
+        abort_unless($request->user()->hasRole(['admin', 'super_admin', 'doctor', 'lab_technician']), 403);
+        abort_unless($request->user()->staff_id !== null, 422, 'A linked staff record is required to verify results.');
+        abort_unless($labResult->status === 'Completed' && filled($labResult->result_value), 409, 'Only completed results with a value can be verified.');
         $labResult->update([
             'verified_by' => $request->user()->staff_id,
             'verified_date' => now(),
-            'status' => 'Completed',
+            'status' => 'Verified',
         ]);
+        if (in_array($labResult->flag, ['High', 'Low', 'Critical'], true)) { event(new \App\Events\AbnormalLabResult($labResult->fresh())); }
         $labResult->load(['patient', 'verifiedBy', 'items']);
         return $this->resource(new Resource($labResult), 'Lab result verified.');
     }
@@ -115,10 +118,11 @@ class LabResultController extends Controller
     public function shareUrl(Request $request, LabResult $labResult): JsonResponse
     {
         $this->authorize('view', $labResult);
+        abort_unless($labResult->status === 'Verified', 409, 'Only verified results can be shared.');
 
         $token = \Illuminate\Support\Str::random(64);
         $labResult->update([
-            'share_token' => $token,
+            'share_token' => hash('sha256', $token),
             'share_expires_at' => now()->addDays(7),
         ]);
 
@@ -131,5 +135,12 @@ class LabResultController extends Controller
                 'expires_at' => $labResult->share_expires_at->toIso8601String(),
             ],
         ]);
+    }
+
+    public function sharedView(Request $request, string $token): View
+    {
+        abort_unless($request->hasValidSignature(), 403);
+        $labResult = LabResult::query()->where('share_token', hash('sha256', $token))->where('status', 'Verified')->where('share_expires_at', '>', now())->with(['patient', 'labTest', 'verifiedBy'])->firstOrFail();
+        return view('laboratory.shared-result', compact('labResult'));
     }
 }

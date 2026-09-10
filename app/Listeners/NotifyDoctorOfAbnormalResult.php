@@ -7,6 +7,7 @@ use App\Services\AfricasTalkingService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
+use App\Models\Notification;
 
 class NotifyDoctorOfAbnormalResult implements ShouldQueue
 {
@@ -20,9 +21,15 @@ class NotifyDoctorOfAbnormalResult implements ShouldQueue
     {
         $labResult = $event->labResult;
         $doctor = $labResult->orderedBy;
-        if (! $doctor || ! $doctor->phone) {
-            return;
+        if ($labResult->status !== 'Verified' || ! $doctor) { return; }
+
+        if ($account = $doctor->user()->first()) {
+            Notification::firstOrCreate(
+                ['user_id' => $account->id, 'type' => 'abnormal_lab_result', 'action_url' => route('web.laboratory.results') . '?search=' . urlencode($labResult->code)],
+                ['title' => 'Abnormal laboratory result', 'message' => "{$labResult->patient->full_name}'s verified {$labResult->test_name} result is flagged {$labResult->flag}.", 'category' => 'clinical', 'is_read' => false]
+            );
         }
+        if (! $doctor->phone) { return; }
 
         $message = "ABNORMAL LAB RESULT ALERT: Patient {$labResult->patient->full_name} ({$labResult->patient->code}) "
             . "Test: {$labResult->test_name} "

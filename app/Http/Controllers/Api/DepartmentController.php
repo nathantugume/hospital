@@ -13,7 +13,7 @@ class DepartmentController extends Controller
     {
         $this->authorize('viewAny', Department::class);
 
-        $query = Department::query();
+        $query = Department::query()->forCompany($request->user());
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -49,10 +49,11 @@ class DepartmentController extends Controller
     {
         $this->authorize('create', Department::class);
         $data = $request->validate(['name' => 'required|string|max:100', 'code' => 'nullable|string|max:20|unique:departments,code', 'head_staff_id' => 'nullable|exists:staff,id', 'description' => 'nullable|string']);
+        if (! empty($data['head_staff_id'])) {
+            abort_unless(\App\Models\Staff::forCompany($request->user())->whereKey($data['head_staff_id'])->exists(), 422);
+        }
 
-        
-
-        $item = Department::create($data);
+        $item = Department::create($data + ['company_id' => $request->user()->company_id]);
 
         return response()->json([
             'success' => true,
@@ -75,6 +76,9 @@ class DepartmentController extends Controller
     {
         $this->authorize('update', $department);
         $data = $request->validate(['name' => 'sometimes|string|max:100', 'head_staff_id' => 'nullable|exists:staff,id', 'status' => 'sometimes|in:Active,Inactive']);
+        if (! empty($data['head_staff_id'])) {
+            abort_unless(\App\Models\Staff::query()->where('company_id', $department->company_id)->whereKey($data['head_staff_id'])->exists(), 422);
+        }
         $department->update($data);
 
         return response()->json([

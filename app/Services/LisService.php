@@ -117,11 +117,6 @@ class LisService
             }
         }
 
-        // Fire AbnormalLabResult event if flagged
-        if (in_array($result->fresh()->flag, ['High', 'Low', 'Critical'])) {
-            event(new \App\Events\AbnormalLabResult($result->fresh()));
-        }
-
         return $result->fresh();
     }
 

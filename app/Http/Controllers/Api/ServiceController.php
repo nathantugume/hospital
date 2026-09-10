@@ -13,7 +13,7 @@ class ServiceController extends Controller
     {
         $this->authorize('viewAny', Service::class);
 
-        $query = Service::query();
+        $query = Service::query()->forCompany($request->user());
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -49,8 +49,10 @@ class ServiceController extends Controller
     {
         $this->authorize('create', Service::class);
         $data = $request->validate(['name' => 'required|string|max:255', 'department_id' => 'nullable|exists:departments,id', 'type' => 'nullable|in:Preventive,Diagnostic,Treatment,Surgical', 'duration' => 'nullable|string|max:50', 'price' => 'required|numeric|min:0']);
-
-        
+        if (! empty($data['department_id'])) {
+            $department = \App\Models\Department::forCompany($request->user())->findOrFail($data['department_id']);
+            $data['department_name'] = $department->name;
+        }
 
         $item = Service::create($data);
 

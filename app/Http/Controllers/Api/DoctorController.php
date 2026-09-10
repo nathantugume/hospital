@@ -13,7 +13,7 @@ class DoctorController extends Controller
     {
         $this->authorize('viewAny', Staff::class);
 
-        $query = Staff::query();
+        $query = Staff::query()->forCompany($request->user());
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -25,7 +25,12 @@ class DoctorController extends Controller
             $query->where('status', $status);
         }
 
-        $query->with(['department', 'certifications', 'reviews'])->where('role', 'like', '%Doctor%')->orWhere('role', 'like', '%Physician%')->orWhere('role', 'like', '%Surgeon%');
+        $query->with(['department', 'certifications', 'reviews'])
+            ->where(function ($query): void {
+                $query->where('role', 'like', '%Doctor%')
+                    ->orWhere('role', 'like', '%Physician%')
+                    ->orWhere('role', 'like', '%Surgeon%');
+            });
 
         $perPage = min((int) $request->input('per_page', 15), 100);
         $items = $query->latest()->paginate($perPage);
@@ -49,6 +54,11 @@ class DoctorController extends Controller
     {
         $this->authorize('create', Staff::class);
         $data = $request->validate(['first_name' => 'required|string|max:100', 'last_name' => 'required|string|max:100', 'email' => 'required|email|unique:staff,email', 'phone' => 'required|string|max:30', 'role' => 'required|string|max:100', 'department_id' => 'nullable|exists:departments,id', 'specialization' => 'nullable|string|max:255', 'license_number' => 'nullable|string|max:100']);
+        $data['company_id'] = $request->user()->company_id;
+
+        if (! empty($data['department_id'])) {
+            abort_unless(\App\Models\Department::forCompany($request->user())->whereKey($data['department_id'])->exists(), 422);
+        }
 
         if (empty($data['code'])) { $data['code'] = 'ST-' . str_pad((string) (Staff::max('id') + 1), 3, '0', STR_PAD_LEFT); } $data['initials'] = strtoupper(substr($data['first_name'], 0, 1) . substr($data['last_name'], 0, 1));
 

@@ -138,7 +138,7 @@ class BladeWebTest extends TestCase
             ->assertSee('Create Prescription')
             ->assertSee('Test Amoxicillin');
 
-        $this->actingAs($doctor)
+        $response = $this->actingAs($doctor)
             ->post(route('web.prescriptions.store'), [
                 'patient_id' => $patient->id,
                 'date' => now()->toDateString(),
@@ -157,10 +157,11 @@ class BladeWebTest extends TestCase
                     ],
                 ],
             ])
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect();
 
         $prescription = Prescription::where('patient_id', $patient->id)->first();
         $this->assertNotNull($prescription);
+        $this->assertSame(route('web.prescriptions.show', $prescription), $response->headers->get('Location'));
         $this->assertSame($staff->id, $prescription->doctor_id);
         $this->assertSame(2, $prescription->refills);
         $this->assertSame('Active', $prescription->status);
@@ -248,9 +249,11 @@ class BladeWebTest extends TestCase
 
     public function test_admin_can_change_currency_from_settings_and_dashboard_uses_it(): void
     {
-        $user = User::factory()->admin()->create();
-        $patient = Patient::factory()->create();
+        $company = \App\Models\Company::firstOrFail();
+        $user = User::factory()->admin()->create(['company_id' => $company->id]);
+        $patient = Patient::factory()->create(['company_id' => $company->id]);
         Invoice::factory()->create([
+            'company_id' => $company->id,
             'patient_id' => $patient->id,
             'amount' => 125000,
             'balance' => 125000,
@@ -276,7 +279,7 @@ class BladeWebTest extends TestCase
             ->assertSee('$ 125,000.00');
 
         $expectedOutstanding = app(\App\Services\CurrencyService::class)->format(
-            Invoice::whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance')
+            Invoice::forCompany($user)->whereIn('status', ['Pending', 'Partial', 'Overdue'])->sum('balance')
         );
 
         $this->actingAs($user)
@@ -312,18 +315,13 @@ class BladeWebTest extends TestCase
             ->assertRedirect(route('access.denied'));
     }
 
-    public function test_legacy_html_pages_show_a_coming_soon_placeholder(): void
+    public function test_legacy_html_pages_redirect_when_a_native_page_is_available(): void
     {
         $user = User::factory()->admin()->create();
 
-        $response = $this->actingAs($user)
+        $this->actingAs($user)
             ->get('/appointment-calendar.html')
-            ->assertOk()
-            ->assertSee('Appointment Calendar is coming soon')
-            ->assertSee('data-menu-toggle');
-
-        $this->assertSame(1, substr_count($response->getContent(), '<!doctype html>'));
-        $this->assertSame(1, substr_count($response->getContent(), 'id="primary-navigation"'));
+            ->assertRedirect(route('web.appointments.calendar'));
 
         $this->actingAs($user)
             ->get('/financial-reports.html')

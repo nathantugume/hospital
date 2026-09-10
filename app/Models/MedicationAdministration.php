@@ -19,7 +19,7 @@ class MedicationAdministration extends Model
     ];
 
     protected $casts = [
-        'scheduled_time' => 'datetimeHi',
+        'scheduled_time' => 'datetime:H:i',
         'administered_at' => 'datetime',
     ];
 

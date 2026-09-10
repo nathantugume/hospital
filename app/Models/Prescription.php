@@ -2,16 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopesThroughPatientCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
 class Prescription extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, ScopesThroughPatientCompany, SoftDeletes;
 
     protected $table = 'prescriptions';
 
@@ -28,6 +30,7 @@ class Prescription extends Model
     public function patient(): BelongsTo { return $this->belongsTo(Patient::class); }
     public function doctor(): BelongsTo { return $this->belongsTo(Staff::class, 'doctor_id'); }
     public function items(): HasMany { return $this->hasMany(PrescriptionItem::class, 'prescription_id'); }
+    public function dispenses(): HasMany { return $this->hasMany(PrescriptionDispense::class); }
 
     public function getActivitylogOptions(): LogOptions
     {

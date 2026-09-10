@@ -3,6 +3,7 @@
 namespace Tests\Feature\Web;
 
 use App\Models\Invoice;
+use App\Models\Company;
 use App\Models\Notification;
 use App\Models\User;
 use Tests\TestCase;
@@ -11,14 +12,14 @@ class ReferenceUiTest extends TestCase
 {
     public function test_dashboard_chart_uses_paid_invoices_and_does_not_expose_another_users_notifications(): void
     {
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['company_id' => Company::query()->firstOrFail()->id]);
         $other = User::factory()->create();
         Notification::forceCreate(['id' => (string) \Illuminate\Support\Str::uuid(), 'user_id' => $admin->id, 'type' => 'info', 'title' => 'My clinical alert', 'message' => 'Visible to this user', 'category' => 'appointments']);
         Notification::forceCreate(['id' => (string) \Illuminate\Support\Str::uuid(), 'user_id' => $other->id, 'type' => 'info', 'title' => 'Private other-user alert', 'message' => 'Must not leak', 'category' => 'appointments']);
         $month = now()->startOfMonth()->subMonths(5);
-        $expected = (float) Invoice::where('status', 'Paid')->whereBetween('payment_date', [$month, $month->copy()->endOfMonth()])->sum('paid_amount');
-        Invoice::factory()->create(['status' => 'Paid', 'payment_date' => $month, 'paid_amount' => 12345]);
-        Invoice::factory()->create(['status' => 'Pending', 'payment_date' => $month, 'paid_amount' => 999999]);
+        $expected = (float) Invoice::forCompany($admin)->where('status', 'Paid')->whereBetween('payment_date', [$month, $month->copy()->endOfMonth()])->sum('paid_amount');
+        Invoice::factory()->create(['company_id' => $admin->company_id, 'status' => 'Paid', 'payment_date' => $month, 'paid_amount' => 12345]);
+        Invoice::factory()->create(['company_id' => $admin->company_id, 'status' => 'Pending', 'payment_date' => $month, 'paid_amount' => 999999]);
 
         $this->actingAs($admin)->get('/')
             ->assertOk()
@@ -57,11 +58,11 @@ class ReferenceUiTest extends TestCase
 
     public function test_dashboard_date_filter_includes_boundary_payments_and_excludes_other_periods(): void
     {
-        $admin = User::factory()->admin()->create();
+        $admin = User::factory()->admin()->create(['company_id' => Company::query()->firstOrFail()->id]);
         foreach (['2025-01-14' => 9000, '2025-01-15' => 1000, '2025-01-20' => 2000, '2025-01-21' => 8000] as $date => $amount) {
-            Invoice::factory()->create(['status' => 'Paid', 'payment_date' => $date, 'paid_amount' => $amount, 'payment_method' => 'Cash']);
+            Invoice::factory()->create(['company_id' => $admin->company_id, 'status' => 'Paid', 'payment_date' => $date, 'paid_amount' => $amount, 'payment_method' => 'Cash']);
         }
-        Invoice::factory()->create(['status' => 'Pending', 'payment_date' => '2025-01-16', 'paid_amount' => 5000]);
+        Invoice::factory()->create(['company_id' => $admin->company_id, 'status' => 'Pending', 'payment_date' => '2025-01-16', 'paid_amount' => 5000]);
 
         $this->actingAs($admin)->get('/?from=2025-01-15&to=2025-01-20')
             ->assertOk()

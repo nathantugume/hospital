@@ -11,6 +11,8 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\Patient::class => \App\Policies\PatientPolicy::class,
         \App\Models\Staff::class => \App\Policies\StaffPolicy::class,
         \App\Models\Appointment::class => \App\Policies\AppointmentPolicy::class,
+        \App\Models\AppointmentRequest::class => \App\Policies\AppointmentRequestPolicy::class,
+        \App\Models\Service::class => \App\Policies\ServicePolicy::class,
         \App\Models\Invoice::class => \App\Policies\InvoicePolicy::class,
         \App\Models\InsuranceClaim::class => \App\Policies\InsuranceClaimPolicy::class,
         \App\Models\LabResult::class => \App\Policies\LabResultPolicy::class,
@@ -28,6 +30,10 @@ class AuthServiceProvider extends ServiceProvider
         \App\Models\PayrollEntry::class => \App\Policies\PayrollEntryPolicy::class,
         \App\Models\Room::class => \App\Policies\RoomPolicy::class,
         \App\Models\Company::class => \App\Policies\CompanyPolicy::class,
+        \App\Models\Ward::class => \App\Policies\WardPolicy::class,
+        \App\Models\Specialization::class => \App\Policies\SpecializationPolicy::class,
+        \App\Models\LabTest::class => \App\Policies\LabTestPolicy::class,
+        \App\Models\LabEquipment::class => \App\Policies\LabEquipmentPolicy::class,
     ];
 
     public function boot(): void

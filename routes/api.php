@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\StaffController;
 use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\DepartmentController;
 use App\Http\Controllers\Api\AppointmentController;
+use App\Http\Controllers\Api\AppointmentRequestController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\InsuranceClaimController;
 use App\Http\Controllers\Api\InsuranceProviderController;
@@ -153,7 +154,7 @@ Route::prefix('v1')->group(function () {
         Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
         Route::post('appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
         Route::get('appointments/calendar/events', [AppointmentController::class, 'calendarEvents']);
-        Route::apiResource('appointment-requests', AppointmentController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::apiResource('appointment-requests', AppointmentRequestController::class)->only(['index', 'store', 'update', 'destroy']);
 
         // ============================================================
         // Billing / Invoices

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\ScopesToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,12 +11,12 @@ use Spatie\Activitylog\LogOptions;
 
 class AppointmentRequest extends Model
 {
-    use HasFactory, LogsActivity;
+    use HasFactory, LogsActivity, ScopesToCompany;
 
     protected $table = 'appointment_requests';
 
     protected $fillable = [
-        'patient_id', 'doctor_id', 'requested_date', 'requested_time', 'type', 'status', 'notes'
+        'company_id', 'patient_id', 'doctor_id', 'requested_date', 'requested_time', 'type', 'status', 'notes'
     ];
 
     protected $casts = [
