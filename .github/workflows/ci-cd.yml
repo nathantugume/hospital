@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       operation:
-        description: Deploy the update or inspect the currently published release
+        description: Deploy the update or inspect the release and refresh PHP cache
         type: choice
         default: deploy
         options:
@@ -282,7 +282,7 @@ jobs:
           printf 'protected_home=%s login=%s asset=%s health=%s\n' "$home_code" "$login_code" "$asset_code" "$health_code"
 
   diagnose:
-    name: Inspect published release
+    name: Inspect release and refresh PHP cache
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.operation == 'diagnose'
     runs-on: ubuntu-latest
     environment: production
@@ -308,6 +308,7 @@ jobs:
           find /home/hospital -maxdepth 2 -type d -not -path '*/.*' -print
           PROBE="release-check-$(openssl rand -hex 12).php"
           trap 'rm -f "$RELEASE/public/$PROBE"' EXIT
-          printf '%s\n' '<?php header("Content-Type: text/plain"); header("Cache-Control: no-store"); echo hash_file("sha256", __DIR__."/../routes/web.php");' > "$RELEASE/public/$PROBE"
+          printf '%s\n' '<?php header("Content-Type: text/plain"); header("Cache-Control: no-store"); echo "routes=".hash_file("sha256", __DIR__."/../routes/web.php")."\n"; echo "opcache_reset=".(function_exists("opcache_reset") && opcache_reset() ? "ok" : "unavailable")."\n";' > "$RELEASE/public/$PROBE"
           curl --silent --show-error --max-time 20 --write-out '\nprobe_status=%{http_code}\n' "https://hospital.alwaysdata.net/$PROBE"
+          curl --silent --show-error --max-time 20 --output /dev/null --write-out 'appointment_requests=%{http_code}\n' https://hospital.alwaysdata.net/appointment-requests
           REMOTE_SCRIPT
